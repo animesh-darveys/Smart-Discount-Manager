@@ -18,11 +18,11 @@ export default function DiscountCategoryCard({
           choices={[
             {
               label: "Amount Off Order",
-              value: "ORDER",
+              value: "order",
             },
             {
               label: "Amount Off Products",
-              value: "PRODUCT",
+              value: "product",
             },
           ]}
         />
