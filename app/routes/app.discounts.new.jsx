@@ -24,7 +24,6 @@ export default function NewDiscount() {
     const [discountType, setDiscountType] = useState("PERCENTAGE");
     const [discountValue, setDiscountValue] = useState("");
     const [minimumPurchase, setMinimumPurchase] = useState("");
-    const [maximumDiscount, setMaximumDiscount] = useState("");
 
     // Product Eligibility
     const [appliesTo, setAppliesTo] = useState("ALL_PRODUCTS");
@@ -36,7 +35,6 @@ export default function NewDiscount() {
 
     const [customerEligibility, setCustomerEligibility] = useState("all");
     const [customerIds, setCustomerIds] = useState("");
-    const [customerTags, setCustomerTags] = useState("");
 
     const [startDate, setStartDate] = useState(
   new Date().toISOString().split("T")[0]
@@ -144,7 +142,6 @@ export default function NewDiscount() {
             discountCode,
             discountValue,
             minimumPurchase,
-            maximumDiscount,
             startDate,
             endDate,
             hasEndDate,
@@ -154,7 +151,6 @@ export default function NewDiscount() {
             selectedCollections,
             customerEligibility,
             customerIds,
-            customerTags,
         });
 
         if (Object.keys(validationErrors).length > 0) {
@@ -177,13 +173,12 @@ export default function NewDiscount() {
                 body: JSON.stringify({
                     title,
                     description,
-
+                    discountCategory,
                     discountCode,
                     discountType,
                     discountValue,
 
                     minimumPurchase,
-                    maximumDiscount,
 
                     appliesTo,
                     selectedProducts,
@@ -191,8 +186,6 @@ export default function NewDiscount() {
 
                     customerEligibility,
                     customerIds,
-                    customerTags,
-
                     startDate,
                     endDate,
                     hasEndDate,
@@ -252,23 +245,22 @@ export default function NewDiscount() {
                         onDescriptionChange={setDescription}
                         errors={errors}
                     />
-                    <DiscountCategoryCard
-                        discountCategory={discountCategory}
-                        onCategoryChange={setDiscountCategory}
-                    />
                     <DiscountConfigurationCard
                         discountCode={discountCode}
                         discountType={discountType}
                         discountValue={discountValue}
                         minimumPurchase={minimumPurchase}
-                        maximumDiscount={maximumDiscount}
                         onDiscountCodeChange={setDiscountCode}
                         onDiscountTypeChange={setDiscountType}
                         onDiscountValueChange={setDiscountValue}
                         onMinimumPurchaseChange={setMinimumPurchase}
-                        onMaximumDiscountChange={setMaximumDiscount}
                         errors={errors}
                     />
+                    <DiscountCategoryCard
+                        discountCategory={discountCategory}
+                        onCategoryChange={setDiscountCategory}
+                    />
+                    
                     {discountCategory === "PRODUCT" && (
 
                         <ProductSelectionCard
@@ -293,10 +285,8 @@ export default function NewDiscount() {
                     <CustomerEligibilityCard
                         customerEligibility={customerEligibility}
                         customerIds={customerIds}
-                        customerTags={customerTags}
                         onEligibilityChange={setCustomerEligibility}
                         onCustomerIdsChange={setCustomerIds}
-                        onCustomerTagsChange={setCustomerTags}
                     />
                     <UsageLimitCard
                         usageLimit={usageLimit}

@@ -20,13 +20,6 @@ export function validateDiscount(data) {
     errors.minimumPurchase = "Minimum purchase cannot be negative.";
   }
 
-  if (
-    data.maximumDiscount &&
-    Number(data.maximumDiscount) <= 0
-  ) {
-    errors.maximumDiscount = "Enter a valid maximum discount.";
-  }
-
   if (!data.startDate) {
     errors.startDate = "Start date is required.";
   }
@@ -73,13 +66,6 @@ export function validateDiscount(data) {
     !data.customerIds.trim()
   ) {
     errors.customerIds = "Enter customer IDs.";
-  }
-
-  if (
-    data.customerEligibility === "tags" &&
-    !data.customerTags.trim()
-  ) {
-    errors.customerTags = "Enter customer tags.";
   }
 
   return errors;

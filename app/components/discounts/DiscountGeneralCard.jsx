@@ -30,7 +30,7 @@ export default function DiscountGeneralCard({
 
         <TextField
           label="Description"
-          placeholder="Enter discount description..."
+          placeholder="Enter discount description here"
           multiline={3}
           value={description}
           onChange={onDescriptionChange}
