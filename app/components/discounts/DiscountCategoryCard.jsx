@@ -1,0 +1,32 @@
+import { Card, ChoiceList, BlockStack, Text } from "@shopify/polaris";
+
+export default function DiscountCategoryCard({
+  discountCategory,
+  onCategoryChange,
+}) {
+  return (
+    <Card>
+      <BlockStack gap="500">
+        <Text as="h2" variant="headingMd">
+          Discount Category
+        </Text>
+
+        <ChoiceList
+          title="Select discount category"
+          selected={[discountCategory]}
+          onChange={(value) => onCategoryChange(value[0])}
+          choices={[
+            {
+              label: "Amount Off Order",
+              value: "ORDER",
+            },
+            {
+              label: "Amount Off Products",
+              value: "PRODUCT",
+            },
+          ]}
+        />
+      </BlockStack>
+    </Card>
+  );
+}
