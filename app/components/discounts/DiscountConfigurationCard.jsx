@@ -12,12 +12,10 @@ export default function DiscountConfigurationCard({
   discountType,
   discountValue,
   minimumPurchase,
-  maximumDiscount,
   onDiscountCodeChange,
   onDiscountTypeChange,
   onDiscountValueChange,
   onMinimumPurchaseChange,
-  onMaximumDiscountChange,
   errors
 }) {
   return (
@@ -50,14 +48,9 @@ export default function DiscountConfigurationCard({
                 label: "Fixed Amount",
                 value: "FIXED_AMOUNT",
               },
-              {
-                label: "Free Shipping",
-                value: "FREE_SHIPPING",
-              },
             ]}
           />
 
-          {discountType !== "FREE_SHIPPING" && (
             <TextField
               label={
                 discountType === "PERCENTAGE"
@@ -73,12 +66,10 @@ export default function DiscountConfigurationCard({
                   onDiscountValueChange(value);
                 }
               }}
-              suffix={discountType === "PERCENTAGE" ? "%" : "₹"}
+              suffix={discountType === "PERCENTAGE" ? "%" : "GBP"}
               autoComplete="off"
               error={errors.discountValue}
             />
-          )}
-
           <TextField
             label="Minimum Purchase"
             type="text"
@@ -89,20 +80,9 @@ export default function DiscountConfigurationCard({
                 onMinimumPurchaseChange(value);
               }
             }}
-            prefix="GBP"
+            suffix="GBP"
             autoComplete="off"
           />
-
-          {discountType === "PERCENTAGE" && (
-            <TextField
-              label="Maximum Discount"
-              type="number"
-              value={maximumDiscount}
-              onChange={onMaximumDiscountChange}
-              prefix="GBP"
-              autoComplete="off"
-            />
-          )}
         </InlineGrid>
       </BlockStack>
     </Card>

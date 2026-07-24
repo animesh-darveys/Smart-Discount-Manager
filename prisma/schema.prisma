@@ -42,7 +42,6 @@ model DiscountOffer {
   discountValue       Float
 
   minimumPurchase     Float?
-  maximumDiscount     Float?
 
   appliesTo           String
 
@@ -52,7 +51,6 @@ model DiscountOffer {
   customerEligibility String
 
   customerIds         Json?
-  customerTags        Json?
 
   startDate           DateTime
   endDate             DateTime?
