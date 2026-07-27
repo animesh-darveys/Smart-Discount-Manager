@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Page, BlockStack } from "@shopify/polaris";
+import { Page, BlockStack, InlineGrid } from "@shopify/polaris";
 import { useAppBridge } from "@shopify/app-bridge-react";
 
 import DiscountGeneralCard from "../components/discounts/DiscountGeneralCard";
@@ -228,11 +228,13 @@ export default function NewDiscount() {
 
     return (
         <Page title="Create Discount">
-            <s-grid
-                gridTemplateColumns="5fr 3fr"
-                gap="small"
-                justifyContent="center"
-            >
+            <InlineGrid
+  columns={{
+    xs: 1,
+    md: "2fr 1fr",
+  }}
+  gap="400"
+>
                 <BlockStack gap="400">
 
                     <DiscountGeneralCard
@@ -313,7 +315,7 @@ export default function NewDiscount() {
                     />
 
                 </BlockStack>
-            </s-grid>
+            </InlineGrid>
 
         </Page>
     );
