@@ -1,6 +1,7 @@
 import { useLoaderData } from "react-router";
 import { authenticate } from "../shopify.server";
 import { getDiscountById } from "../services/discount.server";
+import DiscountForm from "../components/discounts/DiscountForm";
 
 export async function loader({ request, params }) {
   await authenticate.admin(request);
@@ -12,4 +13,15 @@ export async function loader({ request, params }) {
   }
 
   return { discount };
+}
+
+export default function EditDiscount() {
+  const { discount } = useLoaderData();
+
+  return (
+    <DiscountForm
+      mode="edit"
+      discount={discount}
+    />
+  );
 }

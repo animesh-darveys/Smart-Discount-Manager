@@ -12,7 +12,15 @@ import StatusCard from "../discounts/StatusCard";
 import SaveActions from "../discounts/SaveActions";
 import DiscountCategoryCard from "../discounts/DiscountCategoryCard";
 
-import { validateDiscount } from "../../utils/validateDiscount";
+import { useDiscountSubmit } from "../../hooks/useDiscountSubmit";
+
+import { openResourcePicker } from "../../services/resourcePicker.service";
+
+import {
+    mapProduct,
+    mapCollection,
+} from "../../services/resourceMapper";
+
 
 export default function DiscountForm() {
     // General Information
@@ -47,146 +55,87 @@ export default function DiscountForm() {
 
     const [status, setStatus] = useState("active");
 
-    const [loading, setLoading] = useState(false);
-
-    const [errors, setErrors] = useState({});
+    const {
+        submit,
+        loading,
+        errors,
+    } = useDiscountSubmit();
 
     const [discountCategory, setDiscountCategory] = useState("order");
 
-    const handleSelectProducts = async () => {
-        try {
-            const products = await shopify.resourcePicker({
-                type: "product",
-                multiple: true,
-                selectionIds: selectedProducts.map((product) => ({
-                    id: product.id,
-                })),
-            });
+    const resetForm = () => {
+        setTitle("");
+        setDescription("");
 
-            if (!products) return;
+        setDiscountCode("");
+        setDiscountType("PERCENTAGE");
+        setDiscountValue("");
+        setMinimumPurchase("");
 
-            // console.log("Selected Products:", products);
+        setAppliesTo("ALL_PRODUCTS");
+        setSelectedProducts([]);
+        setSelectedCollections([]);
 
-            setSelectedProducts(
-                products.map((product) => ({
-                    id: product.id,
-                    title: product.title,
-                    vendor: product.vendor,
-                    image: product.images?.[0]?.originalSrc ?? "",
-                    handle: product.handle,
-                    status: product.status,
-                }))
-            );
-        } catch (error) {
-            console.error("Product Picker Error:", error);
-        }
+        setCustomerEligibility("all_customer");
+        setCustomerIds("");
+
+        setStartDate(new Date().toISOString().split("T")[0]);
+        setEndDate("");
+        setHasEndDate(false);
+
+        setUsageLimit("");
+        setLimitPerCustomer(false);
+
+        setStatus("active");
+
+        setDiscountCategory("order");
     };
 
-    const handleSelectCollections = async () => {
-        try {
-            const collections = await shopify.resourcePicker({
-                type: "collection",
-                multiple: true,
-                selectionIds: selectedCollections.map((collection) => ({
-                    id: collection.id,
-                })),
-            });
+    const handleSelectProducts = () =>
+        openResourcePicker({
+            shopify,
+            type: "product",
+            selectedItems: selectedProducts,
+            mapper: mapProduct,
+            setSelectedItems: setSelectedProducts,
+        });
 
-            if (!collections) return;
-
-            console.log("Selected Collections:", collections);
-
-            setSelectedCollections(
-                collections.map((collection) => ({
-                    id: collection.id,
-                    title: collection.title,
-                    image: collection.image?.originalSrc ?? "",
-                    handle: collection.handle,
-                }))
-            );
-        } catch (error) {
-            console.error("Collection Picker Error:", error);
-        }
-    };
+    const handleSelectCollections = () =>
+        openResourcePicker({
+            shopify,
+            type: "collection",
+            selectedItems: selectedCollections,
+            mapper: mapCollection,
+            setSelectedItems: setSelectedCollections,
+        });
 
     const handleCreateDiscount = async () => {
-        const validationErrors = validateDiscount({
+        const result = await submit({
             title,
             description,
+            discountCategory,
             discountCode,
+            discountType,
             discountValue,
             minimumPurchase,
-            startDate,
-            endDate,
-            hasEndDate,
-            usageLimit,
             appliesTo,
             selectedProducts,
             selectedCollections,
             customerEligibility,
             customerIds,
+            startDate,
+            endDate,
+            hasEndDate,
+            usageLimit,
+            limitPerCustomer,
+            status,
         });
 
-        if (Object.keys(validationErrors).length > 0) {
-            setErrors(validationErrors);
-            return;
-        }
+        if (!result.success) return;
 
-        setErrors({});
+        alert("Discount saved successfully.");
 
-        // Create Shopify Discount
-        try {
-            setLoading(true);
-
-            const response = await fetch("/app/api/discounts", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-
-                body: JSON.stringify({
-                    title,
-                    description,
-                    discountCategory,
-                    discountCode,
-                    discountType,
-                    discountValue,
-
-                    minimumPurchase,
-
-                    appliesTo,
-                    selectedProducts,
-                    selectedCollections,
-
-                    customerEligibility,
-                    customerIds,
-                    startDate,
-                    endDate,
-                    hasEndDate,
-
-                    usageLimit,
-                    limitPerCustomer,
-
-                    status,
-                }),
-            });
-
-            const result = await response.json();
-
-            console.log(result);
-
-            if (result.success) {
-                alert("Discount saved successfully.");
-            } else {
-                alert(result.message);
-            }
-
-        } catch (error) {
-            console.error(error);
-        } finally {
-            setLoading(false);
-        }
-        // Save Database
+        resetForm();
     };
 
     return (
