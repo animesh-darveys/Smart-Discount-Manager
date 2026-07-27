@@ -1,20 +1,20 @@
 import { useState } from "react";
-import { Page, BlockStack } from "@shopify/polaris";
+import { Page, BlockStack, InlineGrid } from "@shopify/polaris";
 import { useAppBridge } from "@shopify/app-bridge-react";
 
-import DiscountGeneralCard from "../components/discounts/DiscountGeneralCard";
-import DiscountConfigurationCard from "../components/discounts/DiscountConfigurationCard";
-import ProductSelectionCard from "../components/discounts/ProductSelectionCard";
-import CustomerEligibilityCard from "../components/discounts/CustomerEligibilityCard";
-import ScheduleCard from "../components/discounts/ScheduleCard";
-import UsageLimitCard from "../components/discounts/UsageLimitCard";
-import StatusCard from "../components/discounts/StatusCard";
-import SaveActions from "../components/discounts/SaveActions";
-import DiscountCategoryCard from "../components/discounts/DiscountCategoryCard";
+import DiscountGeneralCard from "../discounts/DiscountGeneralCard";
+import DiscountConfigurationCard from "../discounts/DiscountConfigurationCard";
+import ProductSelectionCard from "../discounts/ProductSelectionCard";
+import CustomerEligibilityCard from "../discounts/CustomerEligibilityCard";
+import ScheduleCard from "../discounts/ScheduleCard";
+import UsageLimitCard from "../discounts/UsageLimitCard";
+import StatusCard from "../discounts/StatusCard";
+import SaveActions from "../discounts/SaveActions";
+import DiscountCategoryCard from "../discounts/DiscountCategoryCard";
 
-import { validateDiscount } from "../utils/validateDiscount";
+import { validateDiscount } from "../../utils/validateDiscount";
 
-export default function NewDiscount() {
+export default function DiscountForm() {
     // General Information
     const [title, setTitle] = useState("");
     const [description, setDescription] = useState("");
@@ -109,32 +109,6 @@ export default function NewDiscount() {
         }
     };
 
-    const handleSelectCustomers = async () => {
-        const customers = await shopify.resourcePicker({
-            type: "customer",
-            multiple: true,
-            selectionIds: selectedCustomers.map((customer) => ({
-                id: customer.id,
-            })),
-        });
-
-        if (!customers) return;
-
-        setSelectedCustomers(
-            customers.map((customer) => ({
-                id: customer.id,
-                displayName: customer.displayName,
-                email: customer.email,
-            }))
-        );
-    };
-
-    const handleRemoveCustomer = (id) => {
-        setSelectedCustomers((prev) =>
-            prev.filter((customer) => customer.id !== id)
-        );
-    };
-
     const handleCreateDiscount = async () => {
         const validationErrors = validateDiscount({
             title,
@@ -215,23 +189,14 @@ export default function NewDiscount() {
         // Save Database
     };
 
-    const handleSaveDraft = async () => {
-        try {
-            setLoading(true);
-
-            console.log("Save Draft");
-
-        } finally {
-            setLoading(false);
-        }
-    };
-
     return (
         <Page title="Create Discount">
-            <s-grid
-                gridTemplateColumns="5fr 3fr"
-                gap="small"
-                justifyContent="center"
+            <InlineGrid
+                columns={{
+                    xs: 1,
+                    md: "2fr 1fr",
+                }}
+                gap="400"
             >
                 <BlockStack gap="400">
 
@@ -313,7 +278,7 @@ export default function NewDiscount() {
                     />
 
                 </BlockStack>
-            </s-grid>
+            </InlineGrid>
 
         </Page>
     );
