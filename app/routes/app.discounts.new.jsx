@@ -33,12 +33,12 @@ export default function NewDiscount() {
     const shopify = useAppBridge();
 
 
-    const [customerEligibility, setCustomerEligibility] = useState("all");
+    const [customerEligibility, setCustomerEligibility] = useState("all_customer");
     const [customerIds, setCustomerIds] = useState("");
 
     const [startDate, setStartDate] = useState(
-  new Date().toISOString().split("T")[0]
-);
+        new Date().toISOString().split("T")[0]
+    );
     const [endDate, setEndDate] = useState("");
     const [hasEndDate, setHasEndDate] = useState(false);
 
@@ -51,7 +51,7 @@ export default function NewDiscount() {
 
     const [errors, setErrors] = useState({});
 
-    const [discountCategory, setDiscountCategory] = useState("ORDER");
+    const [discountCategory, setDiscountCategory] = useState("order");
 
     const handleSelectProducts = async () => {
         try {
@@ -221,9 +221,6 @@ export default function NewDiscount() {
 
             console.log("Save Draft");
 
-            // TODO
-            // Save only in database with status = draft
-
         } finally {
             setLoading(false);
         }
@@ -260,8 +257,8 @@ export default function NewDiscount() {
                         discountCategory={discountCategory}
                         onCategoryChange={setDiscountCategory}
                     />
-                    
-                    {discountCategory === "PRODUCT" && (
+
+                    {discountCategory === "product" && (
 
                         <ProductSelectionCard
                             appliesTo={appliesTo}

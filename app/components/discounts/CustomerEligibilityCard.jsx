@@ -28,18 +28,18 @@ export default function CustomerEligibilityCard({
           choices={[
             {
               label: "All Customers",
-              value: "all",
+              value: "all_customer",
             },
             {
               label: "Specific Customers",
-              value: "customers",
+              value: "specific_customers",
             }
           ]}
           selected={[customerEligibility]}
           onChange={handleEligibilityChange}
         />
 
-        {customerEligibility === "customers" && (
+        {customerEligibility === "specific_customers" && (
           <TextField
             label="Customer IDs"
             value={customerIds}

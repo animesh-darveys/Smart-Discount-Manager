@@ -1,55 +1,10 @@
-import { buildDiscountInput } from "../utils/buildDiscountInput";
+import { buildCreateInput } from "../utils/discount-builder.server";
 
-const DISCOUNT_CREATE_MUTATION = `
+const CREATE_DISCOUNT_MUTATION = `
 mutation discountCodeBasicCreate($basicCodeDiscount: DiscountCodeBasicInput!) {
   discountCodeBasicCreate(basicCodeDiscount: $basicCodeDiscount) {
     codeDiscountNode {
       id
-
-      codeDiscount {
-        ... on DiscountCodeBasic {
-          title
-
-          codes(first: 10) {
-            nodes {
-              code
-            }
-          }
-
-          startsAt
-          endsAt
-
-          customerSelection {
-            ... on DiscountCustomerAll {
-              allCustomers
-            }
-          }
-
-          customerGets {
-            value {
-              ... on DiscountPercentage {
-                percentage
-              }
-
-              ... on DiscountAmount {
-                amount {
-                  amount
-                  currencyCode
-                }
-              }
-            }
-
-            items {
-              ... on AllDiscountItems {
-                allItems
-              }
-            }
-          }
-
-          usageLimit
-          appliesOncePerCustomer
-        }
-      }
     }
 
     userErrors {
@@ -61,11 +16,16 @@ mutation discountCodeBasicCreate($basicCodeDiscount: DiscountCodeBasicInput!) {
 }
 `;
 
-export async function createShopifyDiscount(admin, body) {
-  const input = buildDiscountInput(body);
+export async function createDiscount(admin, body) {
+  const input = buildCreateInput(body);
+
+  console.log(
+    "Shopify Discount Input",
+    JSON.stringify(input, null, 2),
+  );
 
   const response = await admin.graphql(
-    DISCOUNT_CREATE_MUTATION,
+    CREATE_DISCOUNT_MUTATION,
     {
       variables: {
         basicCodeDiscount: input,
@@ -80,18 +40,24 @@ export async function createShopifyDiscount(admin, body) {
     JSON.stringify(result, null, 2),
   );
 
-  const errors =
-    result?.data?.discountCodeBasicCreate?.userErrors ?? [];
+  const payload =
+    result?.data?.discountCodeBasicCreate;
 
-  if (errors.length > 0) {
-    throw new Error(errors.map((e) => e.message).join(", "));
+  if (!payload) {
+    throw new Error("Invalid Shopify response.");
+  }
+
+  if (payload.userErrors.length) {
+    throw new Error(
+      payload.userErrors
+        .map((e) => e.message)
+        .join(", "),
+    );
   }
 
   return {
-    shopifyDiscountId:
-      result.data.discountCodeBasicCreate.codeDiscountNode.id,
+    id: payload.codeDiscountNode.id,
 
-    response:
-      result.data.discountCodeBasicCreate,
+    discount: payload.codeDiscountNode.codeDiscount,
   };
 }
