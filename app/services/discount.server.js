@@ -5,7 +5,7 @@ import prisma from "../db.server";
  */
 export async function getDiscounts({
   page = 1,
-  limit = 10,
+  limit = 8,
 }) {
   const skip = (page - 1) * limit;
 

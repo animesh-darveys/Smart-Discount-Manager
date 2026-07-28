@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { validateDiscount } from "../utils/validateDiscount";
-import { createDiscount } from "../services/discount.service";
+import { createDiscountApi } from "../services/discount.service";
 
 export function useDiscountSubmit() {
   const [loading, setLoading] = useState(false);
@@ -19,7 +19,7 @@ export function useDiscountSubmit() {
     try {
       setLoading(true);
 
-      const result = await createDiscount(formData);
+      const result = await createDiscountApi(formData);
 
       return result;
     } catch (error) {
