@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Page, BlockStack, InlineGrid } from "@shopify/polaris";
 import { useAppBridge } from "@shopify/app-bridge-react";
 
@@ -15,15 +15,19 @@ import DiscountCategoryCard from "../discounts/DiscountCategoryCard";
 import { useDiscountSubmit } from "../../hooks/useDiscountSubmit";
 
 import { openResourcePicker } from "../../services/resourcePicker.service";
-
+import { Outlet } from "react-router";
 import {
     mapProduct,
     mapCollection,
 } from "../../services/resourceMapper";
 
+import { formatDate } from "../../utils/formateDate";
 
-export default function DiscountForm() {
-    // General Information
+
+export default function DiscountForm({
+    mode = "create",
+    discount = null,
+}) {
     const [title, setTitle] = useState("");
     const [description, setDescription] = useState("");
 
@@ -34,7 +38,7 @@ export default function DiscountForm() {
     const [minimumPurchase, setMinimumPurchase] = useState("");
 
     // Product Eligibility
-    const [appliesTo, setAppliesTo] = useState("ALL_PRODUCTS");
+    const [appliesTo, setAppliesTo] = useState("products");
     const [selectedProducts, setSelectedProducts] = useState([]);
     const [selectedCollections, setSelectedCollections] = useState([]);
 
@@ -109,7 +113,7 @@ export default function DiscountForm() {
             setSelectedItems: setSelectedCollections,
         });
 
-    const handleCreateDiscount = async () => {
+    const handleSubmit = async () => {
         const result = await submit({
             title,
             description,
@@ -133,13 +137,61 @@ export default function DiscountForm() {
 
         if (!result.success) return;
 
-        alert("Discount saved successfully.");
+        alert(
+            mode === "edit"
+                ? "Discount updated successfully."
+                : "Discount created successfully."
+        );
 
-        resetForm();
+        if (mode === "create") {
+            resetForm();
+        }
     };
 
+    useEffect(() => {
+        if (mode !== "edit" || !discount) return;
+
+        setTitle(discount.title || "");
+        setDescription(discount.description || "");
+
+        setDiscountCode(discount.discountCode || "");
+        setDiscountType(discount.discountType || "PERCENTAGE");
+        setDiscountValue(discount.discountValue || "");
+        setMinimumPurchase(discount.minimumPurchase || "");
+
+        setAppliesTo(discount.appliesTo || "ALL_PRODUCTS");
+
+        setSelectedProducts(discount.selectedProducts || []);
+        setSelectedCollections(discount.selectedCollections || []);
+
+        setCustomerEligibility(
+            discount.customerEligibility || "all_customer"
+        );
+
+        setCustomerIds(discount.customerIds || "");
+
+        setStartDate(
+            discount.startDate
+                ? formatDate(discount.startDate)
+                : formatDate(new Date())
+        );
+
+        setEndDate(formatDate(discount.endDate));
+
+        setHasEndDate(!!discount.endDate);
+
+        setUsageLimit(discount.usageLimit || "");
+        setLimitPerCustomer(discount.limitPerCustomer || false);
+
+        setStatus(discount.status || "active");
+
+        setDiscountCategory(discount.discountCategory || "order");
+
+    }, [mode, discount]);
+
     return (
-        <Page title="Create Discount">
+        <Page title={mode === "edit" ? "Edit Discount" : "Create Discount"}>
+            <Outlet />
             <InlineGrid
                 columns={{
                     xs: 1,
@@ -206,8 +258,9 @@ export default function DiscountForm() {
                         onLimitPerCustomerChange={setLimitPerCustomer}
                     />
                     <SaveActions
+                        mode={mode}
                         loading={loading}
-                        onCreate={handleCreateDiscount}
+                        onSubmit={handleSubmit}
                     />
                 </BlockStack>
                 <BlockStack gap="400">

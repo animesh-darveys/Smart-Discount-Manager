@@ -17,7 +17,6 @@ export async function loader({ request, params }) {
 
 export default function EditDiscount() {
   const { discount } = useLoaderData();
-
   return (
     <DiscountForm
       mode="edit"

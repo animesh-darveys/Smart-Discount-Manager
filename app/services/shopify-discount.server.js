@@ -16,7 +16,7 @@ mutation discountCodeBasicCreate($basicCodeDiscount: DiscountCodeBasicInput!) {
 }
 `;
 
-export async function createDiscount(admin, body) {
+export async function createShopifyDiscount(admin, body) {
   const input = buildCreateInput(body);
 
   console.log(

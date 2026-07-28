@@ -1,4 +1,4 @@
-export async function createDiscount(data) {
+export async function createDiscountApi(data) {
   const response = await fetch("/app/api/discounts", {
     method: "POST",
     headers: {

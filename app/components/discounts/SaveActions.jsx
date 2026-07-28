@@ -1,14 +1,18 @@
 import { PageActions } from "@shopify/polaris";
 
 export default function SaveActions({
+  mode = "create",
   loading = false,
-  onCreate,
+  onSubmit,
 }) {
   return (
     <PageActions
       primaryAction={{
-        content: "Create Discount",
-        onAction: onCreate,
+        content:
+          mode === "edit"
+            ? "Update Discount"
+            : "Create Discount",
+        onAction: onSubmit,
         loading,
       }}
     />

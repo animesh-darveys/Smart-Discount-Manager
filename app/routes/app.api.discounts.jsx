@@ -1,7 +1,6 @@
 import { authenticate } from "../shopify.server";
 import prisma from "../db.server";
 import { createShopifyDiscount } from "../services/shopify-discount.server";
-import { createDiscount } from "../services/shopify-discount.server";
 
 
 export async function action({ request }) {
@@ -10,7 +9,7 @@ export async function action({ request }) {
     const body = await request.json();
 
     const shopifyDiscount =
-      await createDiscount(admin, body);
+      await createShopifyDiscount(admin, body);
 
     const discount = await prisma.discountOffer.create({
       data: {
