@@ -1,6 +1,9 @@
 import { useState } from "react";
 import { validateDiscount } from "../utils/validateDiscount";
-import { createDiscountApi } from "../services/discount.service";
+import {
+  createDiscountApi,
+  updateDiscountApi,
+} from "../services/discount.service";
 
 export function useDiscountSubmit() {
   const [loading, setLoading] = useState(false);
@@ -19,7 +22,10 @@ export function useDiscountSubmit() {
     try {
       setLoading(true);
 
-      const result = await createDiscountApi(formData);
+      const result =
+        formData.mode === "edit"
+          ? await updateDiscountApi(formData.id, formData)
+          : await createDiscountApi(formData);
 
       return result;
     } catch (error) {

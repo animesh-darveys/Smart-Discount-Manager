@@ -115,23 +115,33 @@ export default function DiscountForm({
 
     const handleSubmit = async () => {
         const result = await submit({
+            id: discount?.id,
+            mode,
+
             title,
             description,
+
             discountCategory,
+
             discountCode,
             discountType,
             discountValue,
             minimumPurchase,
+
             appliesTo,
             selectedProducts,
             selectedCollections,
+
             customerEligibility,
             customerIds,
+
             startDate,
             endDate,
             hasEndDate,
+
             usageLimit,
             limitPerCustomer,
+
             status,
         });
 

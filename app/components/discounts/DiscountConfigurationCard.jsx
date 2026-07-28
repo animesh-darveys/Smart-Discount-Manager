@@ -31,6 +31,7 @@ export default function DiscountConfigurationCard({
           onChange={onDiscountCodeChange}
           placeholder="SAVE20"
           autoComplete="off"
+          disabled
           error={errors.discountCode}
         />
         <InlineGrid columns={{ xs: 1, md: 2 }} gap="400">
