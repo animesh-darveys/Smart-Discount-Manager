@@ -95,23 +95,38 @@ export default function DiscountForm({
         setDiscountCategory("order");
     };
 
-    const handleSelectProducts = () =>
-        openResourcePicker({
-            shopify,
-            type: "product",
-            selectedItems: selectedProducts,
-            mapper: mapProduct,
-            setSelectedItems: setSelectedProducts,
-        });
+    const handleSelectProducts = () => {
+    // Clear collections when selecting products
+    setSelectedCollections([]);
 
-    const handleSelectCollections = () =>
-        openResourcePicker({
-            shopify,
-            type: "collection",
-            selectedItems: selectedCollections,
-            mapper: mapCollection,
-            setSelectedItems: setSelectedCollections,
-        });
+    return openResourcePicker({
+        shopify,
+        type: "product",
+        selectedItems: selectedProducts,
+        mapper: mapProduct,
+        setSelectedItems: setSelectedProducts,
+    });
+    };
+
+    const handleSelectCollections = () => {
+    // Clear products when selecting collections
+    setSelectedProducts([]);
+
+    return openResourcePicker({
+        shopify,
+        type: "collection",
+        selectedItems: selectedCollections,
+        mapper: mapCollection,
+        setSelectedItems: setSelectedCollections,
+    });
+    };
+
+    const handleCustomerEligibilityChange = (value) => {
+        setCustomerEligibility(value);
+        if (value === "all_customer") {
+            setCustomerIds("");
+        }
+    };
 
     const handleSubmit = async () => {
         const result = await submit({
@@ -253,12 +268,14 @@ export default function DiscountForm({
                                     prev.filter((collection) => collection.id !== id)
                                 )
                             }
+                            onResetProducts={() => setSelectedProducts([])}
+                            onResetCollections={() => setSelectedCollections([])}
                         />
                     )}
                     <CustomerEligibilityCard
                         customerEligibility={customerEligibility}
                         customerIds={customerIds}
-                        onEligibilityChange={setCustomerEligibility}
+                        onEligibilityChange={handleCustomerEligibilityChange}
                         onCustomerIdsChange={setCustomerIds}
                     />
                     <UsageLimitCard

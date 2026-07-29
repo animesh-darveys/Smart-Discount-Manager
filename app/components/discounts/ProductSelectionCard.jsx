@@ -19,21 +19,23 @@ export default function ProductSelectionCard({
   onSelectCollections,
   onRemoveProduct,
   onRemoveCollection,
+  onResetProducts,
+  onResetCollections,
 }) {
   // Automatically open picker when eligibility changes
-  const handleEligibilityChange = async (value) => {
-    const selected = value[0];
+const handleEligibilityChange = async (value) => {
+  const selected = value[0];
 
-    onAppliesToChange(selected);
+  if (selected === appliesTo) return;
 
-    if (selected === "products") {
-      await onSelectProducts();
-    }
+  onAppliesToChange(selected);
 
-    if (selected === "collections") {
-      await onSelectCollections();
-    }
-  };
+  if (selected === "products") {
+    await onSelectProducts();
+  } else {
+    await onSelectCollections();
+  }
+};
 
   const renderResource = (item, onRemove) => (
     <Box
