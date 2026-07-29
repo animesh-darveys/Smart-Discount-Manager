@@ -131,3 +131,8 @@ function buildMinimumRequirement(body) {
     },
   };
 }
+
+// Reuse the same builder for update
+export function buildUpdateInput(body) {
+  return buildCreateInput(body);
+}

@@ -77,8 +77,8 @@ export default function DiscountForm({
         setMinimumPurchase("");
 
         setAppliesTo("ALL_PRODUCTS");
-        setSelectedProducts([]);
-        setSelectedCollections([]);
+        onSelectedProductsChange([]);
+        onSelectedCollectionsChange([]);
 
         setCustomerEligibility("all_customer");
         setCustomerIds("");
@@ -237,22 +237,28 @@ export default function DiscountForm({
                     {discountCategory === "product" && (
 
                         <ProductSelectionCard
-                            appliesTo={appliesTo}
-                            selectedProducts={selectedProducts}
-                            selectedCollections={selectedCollections}
-                            onAppliesToChange={setAppliesTo}
-                            onSelectProducts={handleSelectProducts}
-                            onSelectCollections={handleSelectCollections}
-                            onRemoveProduct={(id) =>
-                                setSelectedProducts((prev) =>
-                                    prev.filter((product) => product.id !== id)
-                                )
-                            }
-                            onRemoveCollection={(id) =>
-                                setSelectedCollections((prev) =>
-                                    prev.filter((collection) => collection.id !== id)
-                                )
-                            }
+                        appliesTo={appliesTo}
+                        selectedProducts={selectedProducts}
+                        selectedCollections={selectedCollections}
+                        onAppliesToChange={setAppliesTo}
+
+                        onSelectedProductsChange={setSelectedProducts}
+                        onSelectedCollectionsChange={setSelectedCollections}
+
+                        onSelectProducts={handleSelectProducts}
+                        onSelectCollections={handleSelectCollections}
+
+                        onRemoveProduct={(id) =>
+                            setSelectedProducts((prev) =>
+                            prev.filter((product) => product.id !== id)
+                            )
+                        }
+
+                        onRemoveCollection={(id) =>
+                            setSelectedCollections((prev) =>
+                            prev.filter((collection) => collection.id !== id)
+                            )
+                        }
                         />
                     )}
                     <CustomerEligibilityCard

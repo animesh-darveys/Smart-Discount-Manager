@@ -1,6 +1,6 @@
 import { authenticate } from "../shopify.server";
 import prisma from "../db.server";
-import { createShopifyDiscount } from "../services/shopify-discount.server";
+import { createShopifyDiscount, updateShopifyDiscount, } from "../services/shopify-discount.server";
 
 export async function action({ request }) {
   try {
@@ -9,6 +9,39 @@ export async function action({ request }) {
 
     // UPDATE (Database only)
     if (body.mode === "edit") {
+
+      const existingDiscount = await prisma.discountOffer.findUnique({
+  where: {
+    id: body.id,
+  },
+});
+
+console.log("Prisma Discount:", existingDiscount);
+console.log("Shopify Discount ID:", existingDiscount.shopifyDiscountId);
+console.log(existingDiscount.shopifyDiscountId);
+
+      if (!existingDiscount) {
+        throw new Error("Discount not found.");
+      }
+
+      const shopifyResult = await updateShopifyDiscount(
+        admin,
+        existingDiscount.shopifyDiscountId,
+        body
+      );
+
+      if (shopifyResult.userErrors.length) {
+        return Response.json(
+          {
+            success: false,
+            errors: shopifyResult.userErrors,
+          },
+          {
+            status: 400,
+          }
+        );
+      }
+
       const discount = await prisma.discountOffer.update({
         where: {
           id: body.id,
