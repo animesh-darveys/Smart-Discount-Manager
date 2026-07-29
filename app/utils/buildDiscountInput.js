@@ -63,18 +63,22 @@ export function buildDiscountInput(body) {
       },
     };
   }
-
-  // Selected Collections
-  if (
-    body.appliesTo === "COLLECTIONS" &&
-    body.selectedCollections?.length
-  ) {
-    items = {
-      collections: {
-        collectionsToAdd: body.selectedCollections,
-      },
-    };
-  }
+// Selected Collections
+if (
+  body.appliesTo === "collections" &&
+  Array.isArray(body.selectedCollections) &&
+  body.selectedCollections.length > 0
+) {
+  return {
+    collections: {
+      add: body.selectedCollections.map((collection) =>
+        typeof collection === "string"
+          ? collection
+          : collection.id
+      ),
+    },
+  };
+}
 
   input.customerGets = {
     value,

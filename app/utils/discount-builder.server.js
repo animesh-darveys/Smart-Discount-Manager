@@ -18,7 +18,34 @@ export function buildCreateInput(body) {
 
     context: buildContext(body),
 
-    customerGets: buildCustomerGets(body),
+    customerGets: buildCustomerGets(body, true),
+
+    ...(body.minimumPurchase && {
+      minimumRequirement: buildMinimumRequirement(body),
+    }),
+  };
+}
+
+export function buildUpdateInput(body) {
+  return {
+    title: body.title,
+
+    startsAt: new Date(body.startDate).toISOString(),
+
+    ...(body.hasEndDate &&
+      body.endDate && {
+        endsAt: new Date(body.endDate).toISOString(),
+      }),
+
+    appliesOncePerCustomer: body.limitPerCustomer,
+
+    ...(body.usageLimit && {
+      usageLimit: Number(body.usageLimit),
+    }),
+
+    context: buildContext(body),
+
+    customerGets: buildCustomerGets(body, true),
 
     ...(body.minimumPurchase && {
       minimumRequirement: buildMinimumRequirement(body),
@@ -49,11 +76,11 @@ function buildContext(body) {
   }
 }
 
-function buildCustomerGets(body) {
+function buildCustomerGets(body, isUpdate = false) {
   return {
     value: buildDiscountValue(body),
 
-    items: buildItems(body),
+    items: buildItems(body, isUpdate),
 
     appliesOnOneTimePurchase: true,
 
@@ -76,7 +103,7 @@ function buildDiscountValue(body) {
   };
 }
 
-function buildItems(body) {
+function buildItems(body, isUpdate = false) {
 
   // Order discounts apply to the whole order.
   if (body.discountCategory === "order") {
@@ -92,34 +119,88 @@ function buildItems(body) {
   }
 
   // Selected Products
-  if (
-    body.appliesTo === "products" &&
-    Array.isArray(body.selectedProducts) &&
-    body.selectedProducts.length > 0
-  ) {
+if (
+  body.appliesTo === "products" &&
+  Array.isArray(body.selectedProducts)
+) {
+  const newProducts = body.selectedProducts.map((product) =>
+    typeof product === "string" ? product : product.id
+  );
+
+  // CREATE MODE
+  if (!isUpdate) {
     return {
       products: {
-        productsToAdd: body.selectedProducts.map((product) =>
-          typeof product === "string" ? product : product.id
-        ),
+        productsToAdd: newProducts,
       },
     };
   }
 
+  // Existing Shopify Products
+  const existingProducts =
+    body.existingItems?.products?.nodes?.map((p) => p.id) || [];
+
+  // Difference
+  const productsToAdd = newProducts.filter(
+    (id) => !existingProducts.includes(id)
+  );
+
+  const productsToRemove = existingProducts.filter(
+    (id) => !newProducts.includes(id)
+  );
+
+  console.log("productsToAdd", productsToAdd);
+  console.log("productsToRemove", productsToRemove);
+
+  return {
+    products: {
+      productsToAdd: productsToAdd,
+      productsToRemove: productsToRemove,
+    },
+  };
+}
+
   // Selected Collections
   if (
-    body.appliesTo === "collections" &&
-    Array.isArray(body.selectedCollections) &&
-    body.selectedCollections.length > 0
-  ) {
+  body.appliesTo === "collections" &&
+  Array.isArray(body.selectedCollections)
+) {
+  const newCollections = body.selectedCollections.map((collection) =>
+    typeof collection === "string" ? collection : collection.id
+  );
+
+  // CREATE MODE
+  if (!isUpdate) {
     return {
       collections: {
-        add: body.selectedCollections.map((collection) =>
-          typeof collection === "string" ? collection : collection.id
-        ),
+        add: newCollections,
       },
     };
   }
+
+  // Existing Shopify Collections
+  const existingCollections =
+    body.existingItems?.collections?.nodes?.map((c) => c.id) || [];
+
+  // Difference
+  const collectionsToAdd = newCollections.filter(
+    (id) => !existingCollections.includes(id)
+  );
+
+  const collectionsToRemove = existingCollections.filter(
+    (id) => !newCollections.includes(id)
+  );
+
+  console.log("collectionsToAdd", collectionsToAdd);
+  console.log("collectionsToRemove", collectionsToRemove);
+
+  return {
+    collections: {
+      add: collectionsToAdd,
+      remove: collectionsToRemove,
+    },
+  };
+}
 
   throw new Error("Invalid appliesTo selection.");
 }
