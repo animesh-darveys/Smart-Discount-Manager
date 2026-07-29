@@ -37,7 +37,7 @@ export default function DiscountForm({
     const [discountValue, setDiscountValue] = useState("");
     const [minimumPurchase, setMinimumPurchase] = useState("");
 
-    // Product Eligibility
+// Product Eligibility
     const [appliesTo, setAppliesTo] = useState("products");
     const [selectedProducts, setSelectedProducts] = useState([]);
     const [selectedCollections, setSelectedCollections] = useState([]);
@@ -76,7 +76,7 @@ export default function DiscountForm({
         setDiscountValue("");
         setMinimumPurchase("");
 
-        setAppliesTo("ALL_PRODUCTS");
+        setAppliesTo("products");
         setSelectedProducts([]);
         setSelectedCollections([]);
 
@@ -95,23 +95,47 @@ export default function DiscountForm({
         setDiscountCategory("order");
     };
 
-    const handleSelectProducts = () =>
-        openResourcePicker({
-            shopify,
-            type: "product",
-            selectedItems: selectedProducts,
-            mapper: mapProduct,
-            setSelectedItems: setSelectedProducts,
-        });
+    const handleSelectProducts = () => {
+    // Clear collections when selecting products
+    setSelectedCollections([]);
 
-    const handleSelectCollections = () =>
-        openResourcePicker({
-            shopify,
-            type: "collection",
-            selectedItems: selectedCollections,
-            mapper: mapCollection,
-            setSelectedItems: setSelectedCollections,
-        });
+    return openResourcePicker({
+        shopify,
+        type: "product",
+        selectedItems: selectedProducts,
+        mapper: mapProduct,
+        setSelectedItems: setSelectedProducts,
+    });
+    };
+
+    const handleSelectCollections = () => {
+    // Clear products when selecting collections
+    setSelectedProducts([]);
+
+    return openResourcePicker({
+        shopify,
+        type: "collection",
+        selectedItems: selectedCollections,
+        mapper: mapCollection,
+        setSelectedItems: setSelectedCollections,
+    });
+    };
+const handleDiscountCategoryChange = (value) => {
+    setDiscountCategory(value);
+
+    if (value === "product") {
+        setAppliesTo("products");
+    } else {
+        setSelectedProducts([]);
+        setSelectedCollections([]);
+    }
+};
+    const handleCustomerEligibilityChange = (value) => {
+        setCustomerEligibility(value);
+        if (value === "all_customer") {
+            setCustomerIds("");
+        }
+    };
 
     const handleSubmit = async () => {
         const result = await submit({
@@ -128,7 +152,10 @@ export default function DiscountForm({
             discountValue,
             minimumPurchase,
 
-            appliesTo,
+            appliesTo:
+    discountCategory === "order"
+        ? "ALL_PRODUCTS"
+        : appliesTo,
             selectedProducts,
             selectedCollections,
 
@@ -169,7 +196,7 @@ export default function DiscountForm({
         setDiscountValue(discount.discountValue || "");
         setMinimumPurchase(discount.minimumPurchase || "");
 
-        setAppliesTo(discount.appliesTo || "ALL_PRODUCTS");
+        setAppliesTo(discount.appliesTo || "products");
 
         setSelectedProducts(discount.selectedProducts || []);
         setSelectedCollections(discount.selectedCollections || []);
@@ -230,9 +257,9 @@ export default function DiscountForm({
                         mode = {mode}
                     />
                     <DiscountCategoryCard
-                        discountCategory={discountCategory}
-                        onCategoryChange={setDiscountCategory}
-                    />
+    discountCategory={discountCategory}
+    onCategoryChange={handleDiscountCategoryChange}
+/>
 
                     {discountCategory === "product" && (
 
@@ -253,12 +280,14 @@ export default function DiscountForm({
                                     prev.filter((collection) => collection.id !== id)
                                 )
                             }
+                            onResetProducts={() => setSelectedProducts([])}
+                            onResetCollections={() => setSelectedCollections([])}
                         />
                     )}
                     <CustomerEligibilityCard
                         customerEligibility={customerEligibility}
                         customerIds={customerIds}
-                        onEligibilityChange={setCustomerEligibility}
+                        onEligibilityChange={handleCustomerEligibilityChange}
                         onCustomerIdsChange={setCustomerIds}
                     />
                     <UsageLimitCard
