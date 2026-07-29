@@ -37,7 +37,7 @@ export default function DiscountForm({
     const [discountValue, setDiscountValue] = useState("");
     const [minimumPurchase, setMinimumPurchase] = useState("");
 
-    // Product Eligibility
+// Product Eligibility
     const [appliesTo, setAppliesTo] = useState("products");
     const [selectedProducts, setSelectedProducts] = useState([]);
     const [selectedCollections, setSelectedCollections] = useState([]);
@@ -76,7 +76,7 @@ export default function DiscountForm({
         setDiscountValue("");
         setMinimumPurchase("");
 
-        setAppliesTo("ALL_PRODUCTS");
+        setAppliesTo("products");
         setSelectedProducts([]);
         setSelectedCollections([]);
 
@@ -120,7 +120,16 @@ export default function DiscountForm({
         setSelectedItems: setSelectedCollections,
     });
     };
+const handleDiscountCategoryChange = (value) => {
+    setDiscountCategory(value);
 
+    if (value === "product") {
+        setAppliesTo("products");
+    } else {
+        setSelectedProducts([]);
+        setSelectedCollections([]);
+    }
+};
     const handleCustomerEligibilityChange = (value) => {
         setCustomerEligibility(value);
         if (value === "all_customer") {
@@ -143,7 +152,10 @@ export default function DiscountForm({
             discountValue,
             minimumPurchase,
 
-            appliesTo,
+            appliesTo:
+    discountCategory === "order"
+        ? "ALL_PRODUCTS"
+        : appliesTo,
             selectedProducts,
             selectedCollections,
 
@@ -184,7 +196,7 @@ export default function DiscountForm({
         setDiscountValue(discount.discountValue || "");
         setMinimumPurchase(discount.minimumPurchase || "");
 
-        setAppliesTo(discount.appliesTo || "ALL_PRODUCTS");
+        setAppliesTo(discount.appliesTo || "products");
 
         setSelectedProducts(discount.selectedProducts || []);
         setSelectedCollections(discount.selectedCollections || []);
@@ -245,9 +257,9 @@ export default function DiscountForm({
                         mode = {mode}
                     />
                     <DiscountCategoryCard
-                        discountCategory={discountCategory}
-                        onCategoryChange={setDiscountCategory}
-                    />
+    discountCategory={discountCategory}
+    onCategoryChange={handleDiscountCategoryChange}
+/>
 
                     {discountCategory === "product" && (
 
