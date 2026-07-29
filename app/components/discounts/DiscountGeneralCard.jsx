@@ -10,7 +10,8 @@ export default function DiscountGeneralCard({
   description,
   onTitleChange,
   onDescriptionChange,
-  errors
+  errors,
+  mode
 }) {
   return (
     <Card>
@@ -36,6 +37,7 @@ export default function DiscountGeneralCard({
           onChange={onDescriptionChange}
           autoComplete="off"
         />
+        <Text>{mode}</Text>
       </BlockStack>
     </Card>
   );

@@ -13,7 +13,7 @@ import SaveActions from "../discounts/SaveActions";
 import DiscountCategoryCard from "../discounts/DiscountCategoryCard";
 
 import { useDiscountSubmit } from "../../hooks/useDiscountSubmit";
-
+import { BannerExample } from "../discounts/feedback"
 import { openResourcePicker } from "../../services/resourcePicker.service";
 import { Outlet } from "react-router";
 import {
@@ -205,12 +205,11 @@ export default function DiscountForm({
             <InlineGrid
                 columns={{
                     xs: 1,
-                    md: "2fr 1fr",
+                    md: "5fr 3fr",
                 }}
                 gap="400"
             >
                 <BlockStack gap="400">
-
                     <DiscountGeneralCard
                         title={title}
                         description={description}
@@ -228,6 +227,7 @@ export default function DiscountForm({
                         onDiscountValueChange={setDiscountValue}
                         onMinimumPurchaseChange={setMinimumPurchase}
                         errors={errors}
+                        mode = {mode}
                     />
                     <DiscountCategoryCard
                         discountCategory={discountCategory}

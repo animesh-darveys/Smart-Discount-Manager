@@ -16,7 +16,8 @@ export default function DiscountConfigurationCard({
   onDiscountTypeChange,
   onDiscountValueChange,
   onMinimumPurchaseChange,
-  errors
+  errors,
+  mode
 }) {
   return (
     <Card>
@@ -31,7 +32,7 @@ export default function DiscountConfigurationCard({
           onChange={onDiscountCodeChange}
           placeholder="SAVE20"
           autoComplete="off"
-          disabled
+          disabled={mode === "edit"} 
           error={errors.discountCode}
         />
         <InlineGrid columns={{ xs: 1, md: 2 }} gap="400">
