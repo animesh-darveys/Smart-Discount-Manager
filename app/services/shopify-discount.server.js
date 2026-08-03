@@ -68,7 +68,18 @@ mutation discountCodeBasicUpdate(
   }
 }
 `;
-
+const DELETE_DISCOUNT_MUTATION = `
+mutation discountCodeDelete($id: ID!) {
+  discountCodeDelete(id: $id) {
+    deletedCodeDiscountId
+    userErrors {
+      field
+      code
+      message
+    }
+  }
+}
+`;
 export async function createShopifyDiscount(admin, body) {
   const input = buildCreateInput(body);
 
@@ -115,6 +126,78 @@ export async function createShopifyDiscount(admin, body) {
   };
 }
 
+const DEACTIVATE_DISCOUNT_MUTATION = `
+mutation discountCodeDeactivate($id: ID!) {
+  discountCodeDeactivate(id: $id) {
+    codeDiscountNode {
+      id
+    }
+    userErrors {
+      field
+      code
+      message
+    }
+  }
+}
+`;
+
+export async function deactivateShopifyDiscount(admin, id) {
+  const response = await admin.graphql(
+    DEACTIVATE_DISCOUNT_MUTATION,
+    {
+      variables: { id },
+    },
+  );
+
+  const result = await response.json();
+
+  const payload = result.data.discountCodeDeactivate;
+
+  if (payload.userErrors.length) {
+    throw new Error(
+      payload.userErrors.map((e) => e.message).join(", ")
+    );
+  }
+
+  return payload;
+}
+
+const ACTIVATE_DISCOUNT_MUTATION = `
+mutation discountCodeActivate($id: ID!) {
+  discountCodeActivate(id: $id) {
+    codeDiscountNode {
+      id
+    }
+    userErrors {
+      field
+      code
+      message
+    }
+  }
+}
+`;
+
+export async function activateShopifyDiscount(admin, id) {
+  const response = await admin.graphql(
+    ACTIVATE_DISCOUNT_MUTATION,
+    {
+      variables: { id },
+    },
+  );
+
+  const result = await response.json();
+
+  const payload = result.data.discountCodeActivate;
+
+  if (payload.userErrors.length) {
+    throw new Error(
+      payload.userErrors.map((e) => e.message).join(", ")
+    );
+  }
+
+  return payload;
+}
+
 export async function updateShopifyDiscount(admin, body) {
   const existingResponse = await admin.graphql(
   GET_DISCOUNT_PRODUCTS_QUERY,
@@ -140,10 +223,10 @@ const input = buildUpdateInput({
   existingItems,
 });
 
-console.log(
-  "Shopify Update Discount Input",
-  JSON.stringify(input, null, 2),
-);
+// console.log(
+//   "Shopify Update Discount Input",
+//   JSON.stringify(input, null, 2),
+// );
 
   const response = await admin.graphql(
     UPDATE_DISCOUNT_MUTATION,
@@ -157,10 +240,10 @@ console.log(
 
   const result = await response.json();
 
-  console.log(
-    "Shopify Update Discount Response",
-    JSON.stringify(result, null, 2),
-  );
+  // console.log(
+  //   "Shopify Update Discount Response",
+  //   JSON.stringify(result, null, 2),
+  // );
 
   const payload =
     result?.data?.discountCodeBasicUpdate;
@@ -180,4 +263,40 @@ console.log(
   return {
     id: payload.codeDiscountNode.id,
   };
+}
+
+
+export async function deleteShopifyDiscount(admin, shopifyDiscountId) {
+  const response = await admin.graphql(
+    DELETE_DISCOUNT_MUTATION,
+    {
+      variables: {
+        id: shopifyDiscountId,
+      },
+    }
+  );
+
+  const result = await response.json();
+
+  if (result.errors) {
+    throw new Error(
+      result.errors.map((error) => error.message).join(", ")
+    );
+  }
+
+  const discountCodeDelete = result?.data?.discountCodeDelete;
+
+  if (!discountCodeDelete) {
+    throw new Error("Failed to delete Shopify discount.");
+  }
+
+  if (discountCodeDelete.userErrors.length > 0) {
+    throw new Error(
+      discountCodeDelete.userErrors
+        .map((error) => error.message)
+        .join(", ")
+    );
+  }
+
+  return discountCodeDelete.deletedCodeDiscountId;
 }

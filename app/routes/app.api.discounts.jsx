@@ -2,6 +2,12 @@ import { authenticate } from "../shopify.server";
 import prisma from "../db.server";
 import { createShopifyDiscount } from "../services/shopify-discount.server";
 import { updateShopifyDiscount } from "../services/shopify-discount.server";
+import { deleteShopifyDiscount } from "../services/shopify-discount.server";
+
+import {
+  activateShopifyDiscount,
+  deactivateShopifyDiscount,
+} from "../services/shopify-discount.server";
 
 export async function action({ request }) {
   try {
@@ -25,6 +31,26 @@ export async function action({ request }) {
         ...body,
         id: existingDiscount.shopifyDiscountId,
       });
+
+      if (
+  existingDiscount.status === "active" &&
+  body.status === "draft"
+) {
+  await deactivateShopifyDiscount(
+    admin,
+    existingDiscount.shopifyDiscountId
+  );
+}
+
+if (
+  existingDiscount.status === "draft" &&
+  body.status === "active"
+) {
+  await activateShopifyDiscount(
+    admin,
+    existingDiscount.shopifyDiscountId
+  );
+}
 
 
       const discount = await prisma.discountOffer.update({
@@ -82,8 +108,44 @@ export async function action({ request }) {
       });
     }
 
+    // DELETE
+if (body.mode === "delete") {
+
+  const existingDiscount = await prisma.discountOffer.findUnique({
+    where: {
+      id: body.id,
+    },
+  });
+
+  if (!existingDiscount) {
+    throw new Error("Discount not found.");
+  }
+
+  await deleteShopifyDiscount(
+    admin,
+    existingDiscount.shopifyDiscountId
+  );
+
+  await prisma.discountOffer.delete({
+    where: {
+      id: body.id,
+    },
+  });
+
+  return Response.json({
+    success: true,
+    message: "Discount deleted successfully.",
+  });
+}
+
     // CREATE
     const shopifyDiscount = await createShopifyDiscount(admin, body);
+    if (body.status === "draft") {
+  await deactivateShopifyDiscount(
+    admin,
+    shopifyDiscount.id
+  );
+}
 
     const discount = await prisma.discountOffer.create({
       data: {
