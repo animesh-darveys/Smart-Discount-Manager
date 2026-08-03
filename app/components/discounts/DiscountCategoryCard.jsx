@@ -16,7 +16,7 @@ export default function DiscountCategoryCard({
           title="Select discount category"
           selected={[discountCategory]}
           onChange={(value) => onCategoryChange(value[0])}
-          // disabled={mode === "edit"}
+          disabled={mode === "edit"}
           choices={[
             {
               label: "Amount Off Order",

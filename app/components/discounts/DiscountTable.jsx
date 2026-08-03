@@ -10,7 +10,8 @@ import {
 
 import { useMemo } from "react";
 import { useNavigate } from "react-router";
-import { toTitleCase } from "../../utils/string";
+import { toTitleCase, toUpperCase } from "../../utils/string";
+import { deleteDiscountApi } from "../../services/discount.service";
 
 export default function DiscountTable({
   discounts,
@@ -19,6 +20,34 @@ export default function DiscountTable({
 }) {
 
   const navigate = useNavigate();
+
+  async function handleDelete(id) {
+    const confirmed = window.confirm(
+      "Are you sure you want to delete this discount?"
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    try {
+      const response = await deleteDiscountApi(id);
+
+      if (!response.success) {
+        throw new Error(response.message);
+      }
+
+      alert("Discount deleted successfully.");
+
+      // Refresh the current page
+      window.location.reload();
+
+      // Ya agar tum redirect karna chaho:
+      // navigate("/app/discounts");
+    } catch (error) {
+      alert(error.message);
+    }
+  }
 
   const rows = useMemo(() => {
 
@@ -30,12 +59,12 @@ export default function DiscountTable({
         variant="bodyMd"
         fontWeight="semibold"
       >
-        {toTitleCase(discount.title)}
+        {toUpperCase(discount.title)}
       </Text>,
 
-      toTitleCase(discount.discountCode),
+      toUpperCase(discount.discountCode),
 
-      `Amount Off ${toTitleCase(discount.discountCategory)}`,
+      `AMOUNT OFF ${toUpperCase(discount.discountCategory)}`,
 
       discount.formattedCreatedAt,
 
@@ -45,7 +74,7 @@ export default function DiscountTable({
           ? "success"
           : "info"}
       >
-        {toTitleCase(discount.status)}
+        {toUpperCase(discount.status)}
       </Badge>,
 
       <InlineStack
@@ -56,6 +85,7 @@ export default function DiscountTable({
         <Button
           variant="secondary"
           tone="critical"
+          onClick={() => handleDelete(discount.id)}
         >
           Delete
         </Button>
