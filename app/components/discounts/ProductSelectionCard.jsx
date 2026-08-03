@@ -19,6 +19,7 @@ export default function ProductSelectionCard({
   onSelectCollections,
   onRemoveProduct,
   onRemoveCollection,
+  mode,
   onResetProducts,
   onResetCollections,
 }) {
@@ -87,6 +88,7 @@ const handleEligibilityChange = async (value) => {
 
         <ChoiceList
           title="Apply Discount On"
+          disabled={mode === "edit"}
           choices={[
             { label: "Specific Products", value: "products" },
             { label: "Specific Collections", value: "collections" },

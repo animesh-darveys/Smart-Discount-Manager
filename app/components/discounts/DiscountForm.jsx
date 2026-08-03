@@ -37,7 +37,7 @@ export default function DiscountForm({
     const [discountValue, setDiscountValue] = useState("");
     const [minimumPurchase, setMinimumPurchase] = useState("");
 
-// Product Eligibility
+    // Product Eligibility
     const [appliesTo, setAppliesTo] = useState("products");
     const [selectedProducts, setSelectedProducts] = useState([]);
     const [selectedCollections, setSelectedCollections] = useState([]);
@@ -96,40 +96,40 @@ export default function DiscountForm({
     };
 
     const handleSelectProducts = () => {
-    // Clear collections when selecting products
-    setSelectedCollections([]);
+        // Clear collections when selecting products
+        setSelectedCollections([]);
 
-    return openResourcePicker({
-        shopify,
-        type: "product",
-        selectedItems: selectedProducts,
-        mapper: mapProduct,
-        setSelectedItems: setSelectedProducts,
-    });
+        return openResourcePicker({
+            shopify,
+            type: "product",
+            selectedItems: selectedProducts,
+            mapper: mapProduct,
+            setSelectedItems: setSelectedProducts,
+        });
     };
 
     const handleSelectCollections = () => {
-    // Clear products when selecting collections
-    setSelectedProducts([]);
-
-    return openResourcePicker({
-        shopify,
-        type: "collection",
-        selectedItems: selectedCollections,
-        mapper: mapCollection,
-        setSelectedItems: setSelectedCollections,
-    });
-    };
-const handleDiscountCategoryChange = (value) => {
-    setDiscountCategory(value);
-
-    if (value === "product") {
-        setAppliesTo("products");
-    } else {
+        // Clear products when selecting collections
         setSelectedProducts([]);
-        setSelectedCollections([]);
-    }
-};
+
+        return openResourcePicker({
+            shopify,
+            type: "collection",
+            selectedItems: selectedCollections,
+            mapper: mapCollection,
+            setSelectedItems: setSelectedCollections,
+        });
+    };
+    const handleDiscountCategoryChange = (value) => {
+        setDiscountCategory(value);
+
+        if (value === "product") {
+            setAppliesTo("products");
+        } else {
+            setSelectedProducts([]);
+            setSelectedCollections([]);
+        }
+    };
     const handleCustomerEligibilityChange = (value) => {
         setCustomerEligibility(value);
         if (value === "all_customer") {
@@ -153,9 +153,9 @@ const handleDiscountCategoryChange = (value) => {
             minimumPurchase,
 
             appliesTo:
-    discountCategory === "order"
-        ? "ALL_PRODUCTS"
-        : appliesTo,
+                discountCategory === "order"
+                    ? "ALL_PRODUCTS"
+                    : appliesTo,
             selectedProducts,
             selectedCollections,
 
@@ -254,12 +254,13 @@ const handleDiscountCategoryChange = (value) => {
                         onDiscountValueChange={setDiscountValue}
                         onMinimumPurchaseChange={setMinimumPurchase}
                         errors={errors}
-                        mode = {mode}
+                        mode={mode}
                     />
                     <DiscountCategoryCard
-    discountCategory={discountCategory}
-    onCategoryChange={handleDiscountCategoryChange}
-/>
+                        discountCategory={discountCategory}
+                        onCategoryChange={handleDiscountCategoryChange}
+                        mode={mode}
+                    />
 
                     {discountCategory === "product" && (
 
@@ -270,6 +271,7 @@ const handleDiscountCategoryChange = (value) => {
                             onAppliesToChange={setAppliesTo}
                             onSelectProducts={handleSelectProducts}
                             onSelectCollections={handleSelectCollections}
+                            mode={mode}
                             onRemoveProduct={(id) =>
                                 setSelectedProducts((prev) =>
                                     prev.filter((product) => product.id !== id)
