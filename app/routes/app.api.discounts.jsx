@@ -14,6 +14,9 @@ export async function action({ request }) {
     const { admin } = await authenticate.admin(request);
     const body = await request.json();
 
+    console.log("body.customerIds:", JSON.stringify(body.customerIds));
+console.log("isArray:", Array.isArray(body.customerIds));
+
     // UPDATE (Database only)
     if (body.mode === "edit") {
 
@@ -33,24 +36,24 @@ export async function action({ request }) {
       });
 
       if (
-  existingDiscount.status === "active" &&
-  body.status === "draft"
-) {
-  await deactivateShopifyDiscount(
-    admin,
-    existingDiscount.shopifyDiscountId
-  );
-}
+        existingDiscount.status === "active" &&
+        body.status === "draft"
+      ) {
+        await deactivateShopifyDiscount(
+          admin,
+          existingDiscount.shopifyDiscountId
+        );
+      }
 
-if (
-  existingDiscount.status === "draft" &&
-  body.status === "active"
-) {
-  await activateShopifyDiscount(
-    admin,
-    existingDiscount.shopifyDiscountId
-  );
-}
+      if (
+        existingDiscount.status === "draft" &&
+        body.status === "active"
+      ) {
+        await activateShopifyDiscount(
+          admin,
+          existingDiscount.shopifyDiscountId
+        );
+      }
 
 
       const discount = await prisma.discountOffer.update({
@@ -81,9 +84,18 @@ if (
 
           customerEligibility: body.customerEligibility,
 
-          customerIds: body.customerIds
-            ? [body.customerIds]
-            : [],
+          customerIds: (() => {
+  console.log(
+    "Saving customerIds:",
+    JSON.stringify(body.customerIds)
+  );
+
+  return Array.isArray(body.customerIds)
+    ? body.customerIds.flat(Infinity)
+    : body.customerIds
+      ? [body.customerIds]
+      : [];
+})(),
 
           startDate: new Date(body.startDate),
 
@@ -109,43 +121,43 @@ if (
     }
 
     // DELETE
-if (body.mode === "delete") {
+    if (body.mode === "delete") {
 
-  const existingDiscount = await prisma.discountOffer.findUnique({
-    where: {
-      id: body.id,
-    },
-  });
+      const existingDiscount = await prisma.discountOffer.findUnique({
+        where: {
+          id: body.id,
+        },
+      });
 
-  if (!existingDiscount) {
-    throw new Error("Discount not found.");
-  }
+      if (!existingDiscount) {
+        throw new Error("Discount not found.");
+      }
 
-  await deleteShopifyDiscount(
-    admin,
-    existingDiscount.shopifyDiscountId
-  );
+      await deleteShopifyDiscount(
+        admin,
+        existingDiscount.shopifyDiscountId
+      );
 
-  await prisma.discountOffer.delete({
-    where: {
-      id: body.id,
-    },
-  });
+      await prisma.discountOffer.delete({
+        where: {
+          id: body.id,
+        },
+      });
 
-  return Response.json({
-    success: true,
-    message: "Discount deleted successfully.",
-  });
-}
+      return Response.json({
+        success: true,
+        message: "Discount deleted successfully.",
+      });
+    }
 
     // CREATE
     const shopifyDiscount = await createShopifyDiscount(admin, body);
     if (body.status === "draft") {
-  await deactivateShopifyDiscount(
-    admin,
-    shopifyDiscount.id
-  );
-}
+      await deactivateShopifyDiscount(
+        admin,
+        shopifyDiscount.id
+      );
+    }
 
     const discount = await prisma.discountOffer.create({
       data: {
@@ -172,9 +184,18 @@ if (body.mode === "delete") {
 
         customerEligibility: body.customerEligibility,
 
-        customerIds: body.customerIds
-          ? [body.customerIds]
-          : [],
+        customerIds: (() => {
+  console.log(
+    "Saving customerIds:",
+    JSON.stringify(body.customerIds)
+  );
+
+  return Array.isArray(body.customerIds)
+    ? body.customerIds.flat(Infinity)
+    : body.customerIds
+      ? [body.customerIds]
+      : [];
+})(),
 
         startDate: new Date(body.startDate),
 
