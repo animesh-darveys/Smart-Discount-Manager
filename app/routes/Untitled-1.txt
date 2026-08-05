@@ -1,0 +1,355 @@
+// import { authenticate } from "../shopify.server";
+
+// export async function loader({ request }) {
+//   try {
+//     const { admin } = await authenticate.admin(request);
+
+//     // Last 30 days
+//     const last30Days = new Date();
+//     last30Days.setDate(last30Days.getDate() - 30);
+
+//     const fromDate = last30Days.toISOString().split("T")[0];
+//     const today = new Date().toISOString().split("T")[0];
+
+//     const response = await admin.graphql(
+//       `#graphql
+//       query GetOrders($query: String!) {
+//         orders(
+//           first: 100
+//           query: $query
+//           sortKey: CREATED_AT
+//           reverse: true
+//         ) {
+//           nodes {
+//             id
+//             name
+//             createdAt
+//             displayFinancialStatus
+//             displayFulfillmentStatus
+
+//             customer {
+//               id
+//               firstName
+//               lastName
+//             }
+
+//             totalPriceSet {
+//               shopMoney {
+//                 amount
+//                 currencyCode
+//               }
+//             }
+//           }
+//         }
+//       }
+//       `,
+//       {
+//         variables: {
+//           query: `created_at:>=${fromDate} AND created_at:<=${today} AND fulfillment_status:fulfilled`,
+//         },
+//       }
+//     );
+
+//     const data = await response.json();
+
+//     if (data.errors) {
+//       return Response.json(
+//         {
+//           success: false,
+//           errors: data.errors,
+//         },
+//         { status: 500 }
+//       );
+//     }
+
+//     const orders = data.data.orders.nodes;
+
+//     console.table(
+//       orders.map((order) => ({
+//         Order: order.name,
+//         CreatedAt: order.createdAt,
+//         Customer: `${order.customer?.firstName ?? ""} ${order.customer?.lastName ?? ""}`,
+//         Amount: `${order.totalPriceSet.shopMoney.amount} ${order.totalPriceSet.shopMoney.currencyCode}`,
+//         Fulfillment: order.displayFulfillmentStatus,
+//         Payment: order.displayFinancialStatus,
+//       }))
+//     );
+
+//     return Response.json({
+//       success: true,
+//       count: orders.length,
+//       orders,
+//     });
+//   } catch (error) {
+//     console.error(error);
+
+//     return Response.json(
+//       {
+//         success: false,
+//         message: error.message,
+//       },
+//       { status: 500 }
+//     );
+//   }
+// }
+
+// import { authenticate } from "../shopify.server";
+
+// export async function loader({ request }) {
+//   try {
+//     const { admin } = await authenticate.admin(request);
+
+//     // Last 30 days
+//     const last30Days = new Date();
+//     last30Days.setDate(last30Days.getDate() - 30);
+
+//     const fromDate = last30Days.toISOString().split("T")[0];
+//     const today = new Date().toISOString().split("T")[0];
+
+//     const response = await admin.graphql(
+//       `#graphql
+//       query GetOrders($query: String!) {
+//         orders(
+//           first: 100
+//           query: $query
+//           sortKey: CREATED_AT
+//           reverse: true
+//         ) {
+//           nodes {
+//             id
+//             name
+//             createdAt
+//             displayFinancialStatus
+//             displayFulfillmentStatus
+
+//             customer {
+//               id
+//               firstName
+//               lastName
+//             }
+
+//             totalPriceSet {
+//               shopMoney {
+//                 amount
+//                 currencyCode
+//               }
+//             }
+
+//             fulfillments {
+//               id
+//               createdAt
+//               trackingInfo {
+//                 number
+//                 url
+//                 company
+//               }
+//             }
+//           }
+//         }
+//       }
+//       `,
+//       {
+//         variables: {
+//           query: `created_at:>=${fromDate} AND created_at:<=${today} AND fulfillment_status:fulfilled`,
+//         },
+//       }
+//     );
+
+//     const data = await response.json();
+
+//     if (data.errors) {
+//       return Response.json(
+//         {
+//           success: false,
+//           errors: data.errors,
+//         },
+//         { status: 500 }
+//       );
+//     }
+
+//     const allOrders = data?.data?.orders?.nodes || [];
+
+//     // Delivered check is based on tracking/shipment events, not basic fulfillment status.
+//     // Since fulfillment events are a separate shipment event resource, you'll need to
+//     // inspect shipment events for each fulfillment to confirm "delivered".
+//     const formattedOrders = allOrders.map((order) => ({
+//       id: order.id,
+//       name: order.name,
+//       createdAt: order.createdAt,
+//       customerName: `${order.customer?.firstName ?? ""} ${order.customer?.lastName ?? ""}`.trim(),
+//       amount: order.totalPriceSet?.shopMoney?.amount,
+//       currencyCode: order.totalPriceSet?.shopMoney?.currencyCode,
+//       paymentStatus: order.displayFinancialStatus,
+//       fulfillmentStatus: order.displayFulfillmentStatus,
+//       fulfillments: order.fulfillments || [],
+//     }));
+
+//     console.table(
+//       formattedOrders.map((order) => ({
+//         Order: order.name,
+//         CreatedAt: order.createdAt,
+//         Customer: order.customerName,
+//         Amount: `${order.amount ?? ""} ${order.currencyCode ?? ""}`,
+//         Fulfillment: order.fulfillmentStatus,
+//         Payment: order.paymentStatus,
+//         FulfillmentCount: order.fulfillments.length,
+//       }))
+//     );
+
+//     return Response.json({
+//       success: true,
+//       count: formattedOrders.length,
+//       orders: formattedOrders,
+//     });
+//   } catch (error) {
+//     console.error(error);
+
+//     return Response.json(
+//       {
+//         success: false,
+//         message: error.message,
+//       },
+//       { status: 500 }
+//     );
+//   }
+// }
+
+
+import { authenticate } from "../shopify.server";
+
+export async function loader({ request }) {
+  try {
+    const { admin } = await authenticate.admin(request);
+
+    // Last 30 days
+    const last30Days = new Date();
+    last30Days.setDate(last30Days.getDate() - 30);
+
+    const fromDate = last30Days.toISOString().split("T")[0];
+    const today = new Date().toISOString().split("T")[0];
+
+    const response = await admin.graphql(
+      `#graphql
+      query GetOrders($query: String!) {
+        orders(
+          first: 100
+          query: $query
+          sortKey: CREATED_AT
+          reverse: true
+        ) {
+          nodes {
+            id
+            name
+            createdAt
+
+            displayFinancialStatus
+            displayFulfillmentStatus
+
+            metafield(namespace: "custom", key: "order_status") {
+              value
+            }
+            returns(first: 10) {
+              nodes {
+                id
+                status
+              }
+            }
+            customer {
+              id
+              firstName
+              lastName
+            }
+
+            totalPriceSet {
+              shopMoney {
+                amount
+                currencyCode
+              }
+            }
+          }
+        }
+      }
+      `,
+      {
+        variables: {
+          query: `created_at:>=${fromDate} AND created_at:<=${today} AND fulfillment_status:fulfilled`,
+        },
+      }
+    );
+
+    const data = await response.json();
+
+    if (data.errors) {
+      console.error(data.errors);
+
+      return Response.json(
+        {
+          success: false,
+          errors: data.errors,
+        },
+        { status: 500 }
+      );
+    }
+
+    const orders = data.data.orders.nodes || [];
+
+    console.table(
+  orders.map((order) => ({
+    Order: order.name,
+    Payment: order.displayFinancialStatus,
+    Fulfillment: order.displayFulfillmentStatus,
+    OrderStatus: order.metafield?.value,
+    Returns: order.returns.nodes.length,
+  }))
+);
+
+    // Filter only fully delivered orders
+    const deliveredOrders = orders.filter((order) => {
+      const orderStatus =
+        order.metafield?.value?.trim().toLowerCase() || "";
+
+      return (
+        order.displayFinancialStatus === "PAID" &&
+        order.displayFulfillmentStatus === "FULFILLED" &&
+        orderStatus === "delivered"
+      );
+    });
+
+    console.log(
+      "========== DELIVERED ORDERS (LAST 30 DAYS) =========="
+    );
+    console.log("Total Orders:", orders.length);
+
+    console.table(
+      deliveredOrders.map((order) => ({
+        Order: order.name,
+        CreatedAt: order.createdAt,
+        Customer: `${order.customer?.firstName ?? ""} ${
+          order.customer?.lastName ?? ""
+        }`.trim(),
+        Amount: `${order.totalPriceSet.shopMoney.amount} ${
+          order.totalPriceSet.shopMoney.currencyCode
+        }`,
+        Payment: order.displayFinancialStatus,
+        Fulfillment: order.displayFulfillmentStatus,
+        OrderStatus: order.metafield?.value,
+      }))
+    );
+
+    return Response.json({
+      success: true,
+      count: deliveredOrders.length,
+      orders: deliveredOrders,
+    });
+  } catch (error) {
+    console.error(error);
+
+    return Response.json(
+      {
+        success: false,
+        message: error.message,
+      },
+      { status: 500 }
+    );
+  }
+}
