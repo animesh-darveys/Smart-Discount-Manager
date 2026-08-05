@@ -11,18 +11,19 @@ import {
 
 export async function action({ request }) {
   try {
-    const { admin } = await authenticate.admin(request);
+    const { admin, session } = await authenticate.admin(request);
     const body = await request.json();
 
     console.log("body.customerIds:", JSON.stringify(body.customerIds));
-console.log("isArray:", Array.isArray(body.customerIds));
+    console.log("isArray:", Array.isArray(body.customerIds));
 
     // UPDATE (Database only)
     if (body.mode === "edit") {
 
-      const existingDiscount = await prisma.discountOffer.findUnique({
+      const existingDiscount = await prisma.discountOffer.findFirst({
         where: {
           id: body.id,
+          shop: session.shop,
         },
       });
 
@@ -85,17 +86,17 @@ console.log("isArray:", Array.isArray(body.customerIds));
           customerEligibility: body.customerEligibility,
 
           customerIds: (() => {
-  console.log(
-    "Saving customerIds:",
-    JSON.stringify(body.customerIds)
-  );
+            console.log(
+              "Saving customerIds:",
+              JSON.stringify(body.customerIds)
+            );
 
-  return Array.isArray(body.customerIds)
-    ? body.customerIds.flat(Infinity)
-    : body.customerIds
-      ? [body.customerIds]
-      : [];
-})(),
+            return Array.isArray(body.customerIds)
+              ? body.customerIds.flat(Infinity)
+              : body.customerIds
+                ? [body.customerIds]
+                : [];
+          })(),
 
           startDate: new Date(body.startDate),
 
@@ -123,9 +124,10 @@ console.log("isArray:", Array.isArray(body.customerIds));
     // DELETE
     if (body.mode === "delete") {
 
-      const existingDiscount = await prisma.discountOffer.findUnique({
+      const existingDiscount = await prisma.discountOffer.findFirst({
         where: {
           id: body.id,
+          shop: session.shop,
         },
       });
 
@@ -161,6 +163,7 @@ console.log("isArray:", Array.isArray(body.customerIds));
 
     const discount = await prisma.discountOffer.create({
       data: {
+        shop: session.shop,
         title: body.title,
         description: body.description,
 
@@ -185,17 +188,17 @@ console.log("isArray:", Array.isArray(body.customerIds));
         customerEligibility: body.customerEligibility,
 
         customerIds: (() => {
-  console.log(
-    "Saving customerIds:",
-    JSON.stringify(body.customerIds)
-  );
+          console.log(
+            "Saving customerIds:",
+            JSON.stringify(body.customerIds)
+          );
 
-  return Array.isArray(body.customerIds)
-    ? body.customerIds.flat(Infinity)
-    : body.customerIds
-      ? [body.customerIds]
-      : [];
-})(),
+          return Array.isArray(body.customerIds)
+            ? body.customerIds.flat(Infinity)
+            : body.customerIds
+              ? [body.customerIds]
+              : [];
+        })(),
 
         startDate: new Date(body.startDate),
 
