@@ -8,8 +8,11 @@ export async function loader({ request }) {
     const last30Days = new Date();
     last30Days.setDate(last30Days.getDate() - 30);
 
+    // Date strings for Shopify query
     const fromDate = last30Days.toISOString().split("T")[0];
-    const today = new Date().toISOString().split("T")[0];
+
+    const today = new Date();
+    const todayDate = today.toISOString().split("T")[0];
 
     const response = await admin.graphql(
       `#graphql
@@ -35,12 +38,14 @@ export async function loader({ request }) {
             orderDeliveredAt: metafield(namespace: "custom", key: "order_delivered_at") {
               value
             }
+
             returns(first: 10) {
               nodes {
                 id
                 status
               }
             }
+
             customer {
               id
               firstName
@@ -59,7 +64,7 @@ export async function loader({ request }) {
       `,
       {
         variables: {
-          query: `created_at:>=${fromDate} AND created_at:<=${today} AND fulfillment_status:fulfilled`,
+          query: `created_at:>=${fromDate} AND created_at:<=${todayDate} AND fulfillment_status:fulfilled`,
         },
       }
     );
@@ -79,6 +84,8 @@ export async function loader({ request }) {
     }
 
     const orders = data.data.orders.nodes || [];
+
+    console.log("========== ALL ORDERS ==========");
     console.table(
       orders.map((order) => ({
         Order: order.name,
@@ -88,7 +95,8 @@ export async function loader({ request }) {
         DeliveredAt: order.orderDeliveredAt?.value,
       }))
     );
-    // Filter only fully delivered orders
+
+    // Filter only delivered orders
     const deliveredOrders = orders.filter((order) => {
       const orderStatus =
         order.orderStatus?.value?.trim().toLowerCase() || "";
@@ -103,25 +111,49 @@ export async function loader({ request }) {
       );
     });
 
-    console.log("========== DELIVERED ORDERS (LAST 30 DAYS) ==========");
+    console.log("========== DELIVERED ORDERS ==========");
     console.table(
       deliveredOrders.map((order) => ({
         Order: order.name,
-        CreatedAt: order.createdAt,
+        DeliveredAt: order.orderDeliveredAt?.value,
+      }))
+    );
+
+    // Filter only 14+ days delivered orders
+    const rewardOrders = deliveredOrders.filter((order) => {
+      if (!order.orderDeliveredAt?.value) return false;
+
+      const deliveredAt = new Date(order.orderDeliveredAt.value);
+
+      const diffInDays = Math.floor(
+        (today.getTime() - deliveredAt.getTime()) /
+          (1000 * 60 * 60 * 24)
+      );
+
+      console.log(
+        `Order: ${order.name} | Delivered: ${order.orderDeliveredAt.value} | Days: ${diffInDays}`
+      );
+
+      return diffInDays >= 14;
+    });
+
+    console.log("========== REWARD ELIGIBLE ORDERS ==========");
+    console.table(
+      rewardOrders.map((order) => ({
+        Order: order.name,
         Customer: `${order.customer?.firstName ?? ""} ${
           order.customer?.lastName ?? ""
         }`.trim(),
-        Payment: order.displayFinancialStatus,
-        Fulfillment: order.displayFulfillmentStatus,
-        OrderStatus: order.orderStatus?.value,
         DeliveredAt: order.orderDeliveredAt?.value,
+        Amount: order.totalPriceSet.shopMoney.amount,
+        Currency: order.totalPriceSet.shopMoney.currencyCode,
       }))
     );
 
     return Response.json({
       success: true,
-      count: deliveredOrders.length,
-      orders: deliveredOrders,
+      count: rewardOrders.length,
+      orders: rewardOrders,
     });
   } catch (error) {
     console.error(error);
