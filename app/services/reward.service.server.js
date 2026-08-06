@@ -1,8 +1,8 @@
 import prisma from "../db.server";
 
-import { generateCoupon } from "./coupon.service.server";
+import { generateCoupon } from "./reward-coupon.service.server";
 
-import { createDiscountOffer } from "./discount-offer.service.server";
+import { createDiscountOffer } from "./reward-discount-offer.service.server";
 
 export async function syncOrdersToRewards(shop, orders) {
     console.log("========== SYNC ORDERS TO REWARDS ==========");
