@@ -69,7 +69,7 @@ model DiscountOffer {
 
   status              String   @default("active")
 
-  shopifyDiscountId   String?
+  shopifyDiscountId   String? @unique
   source              DiscountSource @default(MANUAL)
 
   createdAt           DateTime @default(now())
@@ -77,35 +77,40 @@ model DiscountOffer {
 }
 
 model Reward {
-  @@index([shop])
-
-  id                  String   @id @default(cuid())
+  id              String   @id @default(cuid())
 
   // Multi-store support
-  shop                String
+  shop            String
 
   // Shopify IDs
-  orderId             String   @unique
-  customerId          String
+  orderId         String
+  orderName       String
+  customerId      String
 
   // Generated Discount
-  discountOfferId     String?
-  discountCode        String?
+  discountOfferId String?
+  discountCode    String?
+  cashbackAmount Decimal @db.Decimal(10,2)
 
   // Processing
-  status              RewardStatus @default(PENDING)
+  status          RewardStatus @default(PENDING)
 
   // Timeline
-  eligibleAt          DateTime
-  generatedAt         DateTime?
-  emailSentAt         DateTime?
+  deliveredAt     DateTime
+  eligibleAt      DateTime
+  generatedAt     DateTime?
+  emailSentAt     DateTime?
 
   // Error handling
-  errorMessage        String?
+  retryCount      Int @default(0)
+  errorMessage    String?
 
   // Audit
-  createdAt           DateTime @default(now())
-  updatedAt           DateTime @updatedAt
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([shop])
+  @@unique([shop, orderId])
 }
 
 enum DiscountSource {
