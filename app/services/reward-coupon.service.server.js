@@ -1,4 +1,4 @@
-import { buildCashbackDiscountInput } from "../utils/cashback-discount-builder.server";
+import { buildCashbackDiscountInput } from "../utils/reward-discount-builder.server";
 
 const CREATE_DISCOUNT_MUTATION = `
 mutation discountCodeBasicCreate(

@@ -154,7 +154,7 @@ export default function DiscountForm({
 
             appliesTo:
                 discountCategory === "order"
-                    ? "ALL_PRODUCTS"
+                    ? "all"
                     : appliesTo,
             selectedProducts,
             selectedCollections,
