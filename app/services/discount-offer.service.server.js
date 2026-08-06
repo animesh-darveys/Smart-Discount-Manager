@@ -22,7 +22,7 @@ export async function createDiscountOffer(
 
         discountCode: coupon.discountCode,
 
-        discountCategory: "ORDER",
+        discountCategory: "order",
 
         discountType: "FIXED_AMOUNT",
 
