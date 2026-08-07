@@ -8,10 +8,19 @@ import {
   Text,
 } from "@shopify/polaris";
 
-import { useMemo } from "react";
-import { useNavigate } from "react-router";
-import { toTitleCase, toUpperCase } from "../../utils/string";
+import { useMemo, useState } from "react";
+import {
+  useNavigate,
+  useRevalidator,
+} from "react-router";
+
+import ConfirmDialog from "../discounts/ConfirmDialog";
+
 import { deleteDiscountApi } from "../../services/discount.service";
+
+import { toUpperCase } from "../../utils/string";
+
+import { useAppBridge } from '@shopify/app-bridge-react';
 
 export default function DiscountTable({
   discounts,
@@ -19,36 +28,48 @@ export default function DiscountTable({
   totalPages,
 }) {
 
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [selectedDiscountId, setSelectedDiscountId] = useState(null);
+  const [deleteLoading, setDeleteLoading] = useState(false);
+  const shopify = useAppBridge();
+
   const navigate = useNavigate();
+  const revalidator = useRevalidator();
 
-  async function handleDelete(id) {
-    const confirmed = window.confirm(
-      "Are you sure you want to delete this discount?"
-    );
+  async function handleDelete() {
 
-    if (!confirmed) {
-      return;
-    }
+    setDeleteLoading(true);
 
     try {
-      const response = await deleteDiscountApi(id);
+
+      const response =
+        await deleteDiscountApi(selectedDiscountId);
 
       if (!response.success) {
         throw new Error(response.message);
       }
 
-      alert("Discount deleted successfully.");
+      setDeleteModalOpen(false);
 
-      // Refresh the current page
-      window.location.reload();
+      shopify.toast.show(
+        "Discount deleted successfully."
+      );
 
-      // Ya agar tum redirect karna chaho:
-      // navigate("/app/discounts");
+      revalidator.revalidate();
+
     } catch (error) {
-      alert(error.message);
-    }
-  }
 
+      shopify.toast.show(error.message, {
+        isError: true,
+      });
+
+    } finally {
+
+      setDeleteLoading(false);
+
+    }
+
+  }
   const rows = useMemo(() => {
 
     return discounts.map((discount) => [
@@ -85,7 +106,10 @@ export default function DiscountTable({
         <Button
           variant="secondary"
           tone="critical"
-          onClick={() => handleDelete(discount.id)}
+          onClick={() => {
+            setSelectedDiscountId(discount.id);
+            setDeleteModalOpen(true);
+          }}
         >
           Delete
         </Button>
@@ -143,6 +167,17 @@ export default function DiscountTable({
           </InlineStack>
         </div>
       )}
+      <ConfirmDialog
+        open={deleteModalOpen}
+        title="Delete Discount"
+        message="Are you sure you want to delete this discount?"
+        confirmText="Delete"
+        cancelText="Cancel"
+        destructive
+        loading={deleteLoading}
+        onConfirm={handleDelete}
+        onCancel={() => setDeleteModalOpen(false)}
+      />
     </>
   );
 

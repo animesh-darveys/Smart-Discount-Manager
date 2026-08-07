@@ -13,9 +13,10 @@ import SaveActions from "../discounts/SaveActions";
 import DiscountCategoryCard from "../discounts/DiscountCategoryCard";
 
 import { useDiscountSubmit } from "../../hooks/useDiscountSubmit";
-import { BannerExample } from "../discounts/feedback"
 import { openResourcePicker } from "../../services/resourcePicker.service";
 import { Outlet } from "react-router";
+
+
 import {
     mapProduct,
     mapCollection,
@@ -174,11 +175,12 @@ export default function DiscountForm({
 
         if (!result.success) return;
 
-        alert(
-            mode === "edit"
-                ? "Discount updated successfully."
-                : "Discount created successfully."
+        shopify.toast.show(
+        mode === "edit"
+            ? "Discount updated successfully."
+            : "Discount created successfully."
         );
+
 
         if (mode === "create") {
             resetForm();

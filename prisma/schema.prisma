@@ -1,96 +1,99 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client-js"
 }
 
-// Note that some adapters may set a maximum length for the String type by default, please ensure your strings are long
-// enough when changing adapters.
-// See https://www.prisma.io/docs/orm/reference/prisma-schema-reference#string for more information
 datasource db {
   provider = "postgresql"
-  url = env("DATABASE_URL")
+  url      = env("DATABASE_URL")
 }
 
 model Session {
-  id            String    @id
-  shop          String
-  state         String
-  isOnline      Boolean   @default(false)
-  scope         String?
-  expires       DateTime?
-  accessToken   String
-  userId        BigInt?
-  firstName     String?
-  lastName      String?
-  email         String?
-  accountOwner  Boolean   @default(false)
-  locale        String?
-  collaborator  Boolean?  @default(false)
-  emailVerified Boolean?  @default(false)
+  id                  String    @id
+  shop                String
+  state               String
+  isOnline            Boolean   @default(false)
+  scope               String?
+  expires             DateTime?
+  accessToken         String
+  userId              BigInt?
+  firstName           String?
+  lastName            String?
+  email               String?
+  accountOwner        Boolean   @default(false)
+  locale              String?
+  collaborator        Boolean?  @default(false)
+  emailVerified       Boolean?  @default(false)
   refreshToken        String?
   refreshTokenExpires DateTime?
 }
 
-
 model DiscountOffer {
-  @@index([shop])
-
-  id                  String   @id @default(cuid())
+  id                  String         @id @default(cuid())
 
   // Multi-store support
   shop                String
 
+  // General
   title               String
   description         String?
 
-  discountCode        String   @unique
+  // Shopify Discount
+  shopifyDiscountId   String?        @unique
+  discountCode        String         @unique
+  source              DiscountSource @default(MANUAL)
 
-  discountCategory    String   @default("ORDER")
+  // Discount Configuration
+  discountCategory    String         @default("ORDER")
   discountType        String
   discountValue       Float
-
   minimumPurchase     Float?
 
+  // Applies To
   appliesTo           String
-
   selectedProducts    Json?
   selectedCollections Json?
 
+  // Customer Eligibility
   customerEligibility String
   customerIds         Json?
+  limitPerCustomer    Boolean        @default(false)
 
+  // Usage
+  usageLimit          Int?
+
+  // Timeline
   startDate           DateTime
   endDate             DateTime?
 
-  usageLimit          Int?
-  limitPerCustomer    Boolean  @default(false)
+  // Status
+  status              String         @default("active")
 
-  status              String   @default("active")
+  // Audit
+  createdAt           DateTime       @default(now())
+  updatedAt           DateTime       @updatedAt
 
-  shopifyDiscountId   String? @unique
-  source              DiscountSource @default(MANUAL)
-
-  createdAt           DateTime @default(now())
-  updatedAt           DateTime @updatedAt
+  @@index([shop])
 }
 
 model Reward {
-  id              String   @id @default(cuid())
+  id              String       @id @default(cuid())
 
   // Multi-store support
   shop            String
 
-  // Shopify IDs
+  // Shopify Order
   orderId         String
   orderName       String
+
+  // Customer
   customerId      String
+  customerEmail   String
+  customerName    String?
 
   // Generated Discount
   discountOfferId String?
   discountCode    String?
-  cashbackAmount Decimal @db.Decimal(10,2)
+  cashbackAmount  Decimal      @db.Decimal(10, 2)
 
   // Processing
   status          RewardStatus @default(PENDING)
@@ -101,22 +104,23 @@ model Reward {
   generatedAt     DateTime?
   emailSentAt     DateTime?
 
-  // Error handling
-  retryCount      Int @default(0)
+  // Error Handling
+  retryCount      Int          @default(0)
   errorMessage    String?
 
   // Audit
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
 
-  @@index([shop])
   @@unique([shop, orderId])
+  @@index([shop])
 }
 
 enum DiscountSource {
   MANUAL
   AUTO_REWARD
 }
+
 enum RewardStatus {
   PENDING
   COMPLETED

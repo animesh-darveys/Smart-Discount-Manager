@@ -46,6 +46,7 @@ export async function getDeliveredOrders(admin) {
 
           customer {
             id
+            email
             firstName
             lastName
           }
