@@ -1,5 +1,9 @@
 import sgMail from "@sendgrid/mail";
 
+if (!process.env.SENDGRID_API_KEY) {
+  throw new Error("SENDGRID_API_KEY is missing.");
+}
+
 sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
 export async function sendRewardEmail({
@@ -142,10 +146,13 @@ export async function sendRewardEmail({
 
     console.log("========== SENDGRID EMAIL ==========");
     console.log("Status :", response.statusCode);
-    console.log("Headers:", response.headers);
+    console.log("Recipient :", customerEmail);
     console.log("====================================");
 
-    return true;
+    return {
+      success: true,
+      statusCode: response.statusCode,
+    };
 
   } catch (error) {
     console.error("========== SENDGRID ERROR ==========");
