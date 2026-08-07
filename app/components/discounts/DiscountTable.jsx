@@ -6,6 +6,7 @@ import {
   InlineStack,
   Pagination,
   Text,
+  EmptyState,
 } from "@shopify/polaris";
 
 import { useMemo, useState } from "react";
@@ -130,43 +131,67 @@ export default function DiscountTable({
 
   return (
     <>
-      <Card>
-        <DataTable
-          columnContentTypes={[
-            "text",
-            "text",
-            "text",
-            "text",
-            "text",
-            "text",
-          ]}
-          headings={[
-            "Title",
-            "Code",
-            "Type",
-            "Created",
-            "Status",
-            "Actions",
-          ]}
-          rows={rows}
-        />
-      </Card>
-      {totalPages > 1 && (
-        <div style={{ marginTop: 16 }}>
-          <InlineStack align="space-between" blockAlign="center">
-            <Text as="p" variant="bodyMd" tone="subdued">
-              Page {page} of {totalPages}
-            </Text>
+      {discounts.length === 0 ? (
+        <Card>
+          <EmptyState
+            heading="No discounts found"
+            image="https://cdn.shopify.com/s/files/1/0262/4071/2726/files/emptystate-files.png"
+            action={{
+              content: "Create Discount",
+              onAction: () => navigate("/app/discounts/new"),
+            }}
+          >
+            <p>
+              You haven't created any discounts yet. Create your first discount
+              to get started.
+            </p>
+          </EmptyState>
+        </Card>
+      ) : (
+        <>
+          <DataTable
+            columnContentTypes={[
+              "text",
+              "text",
+              "text",
+              "text",
+              "text",
+              "text",
+            ]}
+            headings={[
+              "Title",
+              "Code",
+              "Type",
+              "Created",
+              "Status",
+              "Actions",
+            ]}
+            rows={rows}
+          />
 
-            <Pagination
-              hasPrevious={page > 1}
-              hasNext={page < totalPages}
-              onPrevious={() => navigate(`/app/discounts?page=${page - 1}`)}
-              onNext={() => navigate(`/app/discounts?page=${page + 1}`)}
-            />
-          </InlineStack>
-        </div>
+          {totalPages > 1 && (
+            <div style={{ marginTop: 16 }}>
+              <InlineStack align="space-between" blockAlign="center">
+                <Text as="p">
+                  Page {page} of {totalPages}
+                </Text>
+
+                <Pagination
+                  hasPrevious={page > 1}
+                  hasNext={page < totalPages}
+                  onPrevious={() =>
+                    navigate(`/app/discounts?page=${page - 1}`)
+                  }
+                  onNext={() =>
+                    navigate(`/app/discounts?page=${page + 1}`)
+                  }
+                />
+              </InlineStack>
+            </div>
+          )}
+        </>
       )}
+
       <ConfirmDialog
         open={deleteModalOpen}
         title="Delete Discount"
