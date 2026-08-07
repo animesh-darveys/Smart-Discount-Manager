@@ -78,7 +78,7 @@ export async function sendRewardEmail({
 
                         <tr>
                           <td><strong>Cashback</strong></td>
-                          <td>${cashbackAmount}</td>
+                          <td>£${cashbackAmount}</td>
                         </tr>
 
                         <tr>

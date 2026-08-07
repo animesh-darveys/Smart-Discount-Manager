@@ -177,6 +177,10 @@ export async function processPendingRewards(admin, shop) {
       );
 
       console.log(
+        `End Date : ${coupon.endDate}`
+      );
+
+      console.log(
         `Discount Offer : ${discountOffer.id}`
       );
 
