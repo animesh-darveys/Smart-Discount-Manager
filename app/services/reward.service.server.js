@@ -61,9 +61,7 @@ export async function syncOrdersToRewards(shop, orders) {
 
       const orderAmount = Number(order.totalPriceSet.shopMoney.amount);
 
-      const cashbackAmount = Number(
-        (orderAmount * 0.05).toFixed(2)
-      );
+      const cashbackAmount = Math.floor(orderAmount * 0.05);
 
       await prisma.reward.create({
         data: {
