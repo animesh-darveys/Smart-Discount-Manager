@@ -8,10 +8,17 @@ import {
   Text,
 } from "@shopify/polaris";
 
-import { useMemo } from "react";
-import { useNavigate } from "react-router";
-import { toTitleCase, toUpperCase } from "../../utils/string";
+import { useMemo, useState  } from "react";
+import {
+  useNavigate,
+  useRevalidator,
+} from "react-router";
+
 import { deleteDiscountApi } from "../../services/discount.service";
+
+import { toUpperCase } from "../../utils/string";
+
+import {useAppBridge} from '@shopify/app-bridge-react';
 
 export default function DiscountTable({
   discounts,
@@ -19,7 +26,10 @@ export default function DiscountTable({
   totalPages,
 }) {
 
+  const shopify = useAppBridge();
+
   const navigate = useNavigate();
+  const revalidator = useRevalidator();
 
   async function handleDelete(id) {
     const confirmed = window.confirm(
@@ -37,15 +47,19 @@ export default function DiscountTable({
         throw new Error(response.message);
       }
 
-      alert("Discount deleted successfully.");
+      shopify.toast.show("Discount deleted successfully.");
+
+      revalidator.revalidate();
 
       // Refresh the current page
-      window.location.reload();
+      // window.location.reload();
 
       // Ya agar tum redirect karna chaho:
       // navigate("/app/discounts");
     } catch (error) {
-      alert(error.message);
+      shopify.toast.show(error.message, {
+        isError: true,
+      });
     }
   }
 
