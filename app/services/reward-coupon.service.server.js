@@ -24,7 +24,7 @@ function generateCouponCode() {
   const timestamp = Date.now().toString().slice(-6);
   const random = Math.floor(1000 + Math.random() * 9000);
 
-  return `CASHBACK-${timestamp}-${random}`;
+  return `DARCSB${timestamp}${random}`;
 }
 
 export async function generateCoupon(admin, reward) {
