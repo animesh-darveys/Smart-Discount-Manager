@@ -14,6 +14,7 @@ export async function sendRewardEmail({
   expiryDate,
 }) {
   try {
+    const formattedExpiryDate = new Date(expiryDate).toLocaleDateString( "en-GB", { day: "2-digit", month: "long", year: "numeric", } );
     const message = {
       to: customerEmail,
 
@@ -41,7 +42,7 @@ export async function sendRewardEmail({
                   width="600"
                   cellpadding="0"
                   cellspacing="0"
-                  style="background:#ffffff;border-radius:8px;padding:40px;"
+                  style="background:#ffffff;border-radius:8px;padding:32px 16px;"
                 >
 
                   <tr>
@@ -100,7 +101,7 @@ export async function sendRewardEmail({
 
                         <tr>
                           <td><strong>Valid Until</strong></td>
-                          <td>${expiryDate}</td>
+                          <td>${formattedExpiryDate}</td>
                         </tr>
 
                       </table>
