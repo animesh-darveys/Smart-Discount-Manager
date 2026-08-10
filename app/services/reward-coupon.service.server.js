@@ -72,9 +72,8 @@ export async function generateCoupon(admin, reward) {
   }
 
   return {
-    discountOfferId:
-      payload.codeDiscountNode.id,
-
+    discountOfferId:payload.codeDiscountNode.id,
     discountCode: couponCode,
+    endDate: input.endsAt,
   };
 }
