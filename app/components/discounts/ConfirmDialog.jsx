@@ -2,6 +2,7 @@ import {
   Modal,
   Text,
 } from "@shopify/polaris";
+import PropTypes from "prop-types";
 
 export default function ConfirmDialog({
   open,
@@ -40,3 +41,17 @@ export default function ConfirmDialog({
     </Modal>
   );
 }
+
+ConfirmDialog.propTypes = {
+  open: PropTypes.bool.isRequired,
+  title: PropTypes.string.isRequired,
+  message: PropTypes.string.isRequired,
+
+  loading: PropTypes.bool,
+  confirmText: PropTypes.string,
+  cancelText: PropTypes.string,
+  destructive: PropTypes.bool,
+
+  onConfirm: PropTypes.func.isRequired,
+  onCancel: PropTypes.func.isRequired,
+};

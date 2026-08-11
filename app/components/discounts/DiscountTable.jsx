@@ -8,6 +8,7 @@ import {
   Text,
   EmptyState,
 } from "@shopify/polaris";
+import PropTypes from "prop-types";
 
 import { useMemo, useState } from "react";
 import {
@@ -127,7 +128,7 @@ export default function DiscountTable({
 
     ]);
 
-  }, [discounts]);
+  }, [discounts, navigate]);
 
   return (
     <>
@@ -142,8 +143,7 @@ export default function DiscountTable({
             }}
           >
             <p>
-              You haven't created any discounts yet. Create your first discount
-              to get started.
+              You haven&apos;t created any discounts yet. Create your first discount to get started.
             </p>
           </EmptyState>
         </Card>
@@ -207,3 +207,18 @@ export default function DiscountTable({
   );
 
 }
+DiscountTable.propTypes = {
+  discounts: PropTypes.arrayOf(
+    PropTypes.shape({
+      id: PropTypes.string.isRequired,
+      title: PropTypes.string,
+      discountCode: PropTypes.string,
+      discountCategory: PropTypes.string,
+      formattedCreatedAt: PropTypes.string,
+      status: PropTypes.string,
+    })
+  ).isRequired,
+
+  page: PropTypes.number.isRequired,
+  totalPages: PropTypes.number.isRequired,
+};

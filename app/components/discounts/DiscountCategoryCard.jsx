@@ -1,4 +1,5 @@
 import { Card, ChoiceList, BlockStack, Text } from "@shopify/polaris";
+import PropTypes from "prop-types";
 
 export default function DiscountCategoryCard({
   discountCategory,
@@ -32,3 +33,4 @@ export default function DiscountCategoryCard({
     </Card>
   );
 }
+DiscountCategoryCard.propTypes = { discountCategory: PropTypes.string.isRequired, onCategoryChange: PropTypes.func.isRequired, mode: PropTypes.string.isRequired, };

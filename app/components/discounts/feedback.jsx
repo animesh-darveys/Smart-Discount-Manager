@@ -1,6 +1,6 @@
 import { Banner } from "@shopify/polaris";
 import { useNavigate } from "react-router";
-
+import PropTypes from "prop-types";
 export function BannerExample({ mode }) {
   const navigate = useNavigate();
 
@@ -16,3 +16,6 @@ export function BannerExample({ mode }) {
     />
   );
 }
+BannerExample.propTypes = {
+  mode: PropTypes.string.isRequired,
+};

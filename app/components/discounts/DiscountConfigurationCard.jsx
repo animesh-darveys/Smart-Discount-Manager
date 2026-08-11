@@ -6,6 +6,7 @@ import {
   InlineGrid,
   Select,
 } from "@shopify/polaris";
+import PropTypes from "prop-types";
 
 export default function DiscountConfigurationCard({
   discountCode,
@@ -90,3 +91,21 @@ export default function DiscountConfigurationCard({
     </Card>
   );
 }
+DiscountConfigurationCard.propTypes = {
+  discountCode: PropTypes.string.isRequired,
+  discountType: PropTypes.string.isRequired,
+  discountValue: PropTypes.string.isRequired,
+  minimumPurchase: PropTypes.string.isRequired,
+
+  onDiscountCodeChange: PropTypes.func.isRequired,
+  onDiscountTypeChange: PropTypes.func.isRequired,
+  onDiscountValueChange: PropTypes.func.isRequired,
+  onMinimumPurchaseChange: PropTypes.func.isRequired,
+
+  errors: PropTypes.shape({
+    discountCode: PropTypes.string,
+    discountValue: PropTypes.string,
+  }).isRequired,
+
+  mode: PropTypes.string.isRequired,
+};
