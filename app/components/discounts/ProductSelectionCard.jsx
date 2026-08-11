@@ -9,7 +9,7 @@ import {
   Thumbnail,
 } from "@shopify/polaris";
 import { DeleteIcon } from "@shopify/polaris-icons";
-
+import PropTypes from "prop-types";
 export default function ProductSelectionCard({
   appliesTo,
   selectedProducts,
@@ -20,8 +20,6 @@ export default function ProductSelectionCard({
   onRemoveProduct,
   onRemoveCollection,
   mode,
-  onResetProducts,
-  onResetCollections,
 }) {
   // Automatically open picker when eligibility changes
 const handleEligibilityChange = async (value) => {
@@ -148,3 +146,33 @@ const handleEligibilityChange = async (value) => {
     </Card>
   );
 }
+ProductSelectionCard.propTypes = {
+  appliesTo: PropTypes.string.isRequired,
+
+  selectedProducts: PropTypes.arrayOf(
+    PropTypes.shape({
+      id: PropTypes.string.isRequired,
+      title: PropTypes.string,
+      image: PropTypes.string,
+      vendor: PropTypes.string,
+    })
+  ).isRequired,
+
+  selectedCollections: PropTypes.arrayOf(
+    PropTypes.shape({
+      id: PropTypes.string.isRequired,
+      title: PropTypes.string,
+      image: PropTypes.string,
+    })
+  ).isRequired,
+
+  onAppliesToChange: PropTypes.func.isRequired,
+  onSelectProducts: PropTypes.func.isRequired,
+  onSelectCollections: PropTypes.func.isRequired,
+  onRemoveProduct: PropTypes.func.isRequired,
+  onRemoveCollection: PropTypes.func.isRequired,
+
+  mode: PropTypes.string.isRequired,
+  onResetProducts: PropTypes.func,
+  onResetCollections: PropTypes.func,
+};

@@ -4,6 +4,7 @@ import {
   ChoiceList,
   Text,
 } from "@shopify/polaris";
+import PropTypes from "prop-types";
 
 export default function StatusCard({
   status,
@@ -35,3 +36,7 @@ export default function StatusCard({
     </Card>
   );
 }
+StatusCard.propTypes = {
+  status: PropTypes.string.isRequired,
+  onStatusChange: PropTypes.func.isRequired,
+};

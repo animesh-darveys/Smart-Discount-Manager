@@ -4,7 +4,7 @@ import {
   TextField,
   Text,
 } from "@shopify/polaris";
-
+import PropTypes from "prop-types";
 export default function DiscountGeneralCard({
   title,
   description,
@@ -42,3 +42,15 @@ export default function DiscountGeneralCard({
     </Card>
   );
 }
+DiscountGeneralCard.propTypes = {
+  title: PropTypes.string.isRequired,
+  description: PropTypes.string.isRequired,
+  onTitleChange: PropTypes.func.isRequired,
+  onDescriptionChange: PropTypes.func.isRequired,
+
+  errors: PropTypes.shape({
+    title: PropTypes.string,
+  }).isRequired,
+
+  mode: PropTypes.string.isRequired,
+};

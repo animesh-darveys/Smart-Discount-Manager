@@ -5,6 +5,7 @@ import {
   Text,
   TextField,
 } from "@shopify/polaris";
+import PropTypes from "prop-types";
 
 export default function CustomerEligibilityCard({
   customerEligibility,
@@ -53,3 +54,5 @@ export default function CustomerEligibilityCard({
     </Card>
   );
 }
+
+CustomerEligibilityCard.propTypes = { customerEligibility: PropTypes.string.isRequired, customerIds: PropTypes.string.isRequired, onEligibilityChange: PropTypes.func.isRequired, onCustomerIdsChange: PropTypes.func.isRequired, };

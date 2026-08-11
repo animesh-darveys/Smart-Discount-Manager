@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Page, BlockStack, InlineGrid } from "@shopify/polaris";
 import { useAppBridge } from "@shopify/app-bridge-react";
+import PropTypes from "prop-types";
 
 import DiscountGeneralCard from "../discounts/DiscountGeneralCard";
 import DiscountConfigurationCard from "../discounts/DiscountConfigurationCard";
@@ -328,3 +329,7 @@ export default function DiscountForm({
         </Page>
     );
 }
+DiscountForm.propTypes = {
+  mode: PropTypes.string,
+  discount: PropTypes.object,
+};

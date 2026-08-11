@@ -1,4 +1,5 @@
 import { PageActions } from "@shopify/polaris";
+import PropTypes from "prop-types";
 
 export default function SaveActions({
   mode = "create",
@@ -18,3 +19,8 @@ export default function SaveActions({
     />
   );
 }
+SaveActions.propTypes = {
+  mode: PropTypes.string,
+  loading: PropTypes.bool,
+  onSubmit: PropTypes.func.isRequired,
+};

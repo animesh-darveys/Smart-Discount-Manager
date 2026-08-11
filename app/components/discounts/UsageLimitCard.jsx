@@ -5,6 +5,7 @@ import {
   Text,
   TextField,
 } from "@shopify/polaris";
+import PropTypes from "prop-types";
 
 export default function UsageLimitCard({
   usageLimit,
@@ -44,3 +45,9 @@ export default function UsageLimitCard({
     </Card>
   );
 }
+UsageLimitCard.propTypes = {
+  usageLimit: PropTypes.string.isRequired,
+  limitPerCustomer: PropTypes.bool.isRequired,
+  onUsageLimitChange: PropTypes.func.isRequired,
+  onLimitPerCustomerChange: PropTypes.func.isRequired,
+};

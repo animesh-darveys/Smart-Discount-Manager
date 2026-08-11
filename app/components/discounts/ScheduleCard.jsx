@@ -6,7 +6,7 @@ import {
   TextField,
   InlineGrid
 } from "@shopify/polaris";
-
+import PropTypes from "prop-types";
 export default function ScheduleCard({
   startDate,
   endDate,
@@ -51,3 +51,12 @@ export default function ScheduleCard({
     </Card>
   );
 }
+ScheduleCard.propTypes = {
+  startDate: PropTypes.string.isRequired,
+  endDate: PropTypes.string.isRequired,
+  hasEndDate: PropTypes.bool.isRequired,
+
+  onStartDateChange: PropTypes.func.isRequired,
+  onEndDateChange: PropTypes.func.isRequired,
+  onHasEndDateChange: PropTypes.func.isRequired,
+};
