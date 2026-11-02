@@ -19,6 +19,7 @@ export default function App() {
       <s-app-nav>
         <Link to="/app/discounts">Discounts</Link>
         <Link to="/app/discounts/new">Create Discount</Link>
+        <Link to="/app/discounts/settings">Reward Settings</Link>
       </s-app-nav>
       <Outlet />
     </AppProvider>

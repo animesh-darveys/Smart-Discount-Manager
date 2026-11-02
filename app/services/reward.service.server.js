@@ -1,26 +1,38 @@
 import prisma from "../db.server";
-
+import { getShopSettings } from "./settings.service.server";
 import { generateCoupon } from "./reward-coupon.service.server";
 import { createDiscountOffer } from "./reward-discount-offer.service.server";
 import { sendRewardEmail } from "./reward-email.service.server";
+import { deleteShopifyDiscount } from "./shopify-discount.server";
+import {
+  parseDeliveredAt,
+  startOfUtcDay,
+} from "./order.service.server";
 
-export async function syncOrdersToRewards(shop, orders) {
-  console.log("========== SYNC ORDERS TO REWARDS ==========");
+const AUTO_REWARD_SOURCE = "AUTO_REWARD";
 
+export async function syncOrdersToRewards(admin, shop, orders) {
+  const { settings, currency } = await getShopSettings(admin);
+  
   let inserted = 0;
   let skipped = 0;
+  let failed = 0;
 
   if (!orders.length) {
-    console.log("No delivered orders found.");
-
     return {
       inserted,
       skipped,
+      failed,
     };
   }
 
-  const existingRewards = await prisma.reward.findMany({
+  // --------------------------------------------------
+  // Duplicate Check
+  // --------------------------------------------------
+  const existingOffers = await prisma.discountOffer.findMany({
     where: {
+      shop,
+      source: AUTO_REWARD_SOURCE,
       orderId: {
         in: orders.map((order) => order.id),
       },
@@ -31,235 +43,234 @@ export async function syncOrdersToRewards(shop, orders) {
   });
 
   const existingOrderIds = new Set(
-    existingRewards.map((reward) => reward.orderId)
+    existingOffers.map((offer) => offer.orderId)
   );
 
   for (const order of orders) {
     try {
+      console.log(`\nProcessing Order : ${order.name}`);
+
+      // --------------------------------------------------
+      // Customer Validation
+      // --------------------------------------------------
       if (!order.customer?.id) {
         console.log(`⏭️ Guest Order Skipped : ${order.name}`);
         skipped++;
         continue;
       }
 
+      // --------------------------------------------------
+      // Duplicate Check
+      // --------------------------------------------------
       if (existingOrderIds.has(order.id)) {
-        console.log(`⏭️ Reward already exists : ${order.name}`);
+        console.log(
+          `⏭️ Cashback Discount Already Exists : ${order.name}`
+        );
+
         skipped++;
         continue;
       }
 
-      if (!order.orderDeliveredAt?.value) {
-        console.log(`⏭️ Delivered date missing : ${order.name}`);
+      // --------------------------------------------------
+      // Delivered Date Validation
+      // --------------------------------------------------
+      const deliveredAt = parseDeliveredAt(
+        order.orderDeliveredAt?.value
+      );
+
+      if (!deliveredAt) {
+        console.log(
+          `⏭️ Delivered Date Missing : ${order.name}`
+        );
+
         skipped++;
         continue;
       }
 
-      const deliveredAt = new Date(order.orderDeliveredAt.value);
+      // --------------------------------------------------
+      // 14-Day Eligibility Check
+      // --------------------------------------------------
+      // Calendar days, not exact hours: an order delivered at any time on
+      // 5 Oct is eligible from the start of 19 Oct (UTC).
+      const eligibilityDays =  Number(settings.rewardEligibilityDays);
+      const eligibleAt = startOfUtcDay(deliveredAt, eligibilityDays);
 
-      const eligibleAt = new Date(deliveredAt);
-      eligibleAt.setDate(eligibleAt.getDate() + 14);
+      const cashbackPercentage = Number(settings.cashbackPercentage);
 
-      const orderAmount = Number(order.totalPriceSet.shopMoney.amount);
 
-      const cashbackAmount = Math.floor(orderAmount * 0.05);
+      if (
+        !Number.isFinite(eligibilityDays) ||
+        eligibilityDays <= 0
+      ) {
+        throw new Error("Invalid reward eligibility days setting");
+      }
 
-      await prisma.reward.create({
-        data: {
-          shop,
+      if (
+        !Number.isFinite(cashbackPercentage) ||
+        cashbackPercentage <= 0
+      ) {
+        throw new Error("Invalid cashback percentage setting");
+      }
 
-          orderId: order.id,
-          orderName: order.name,
+      if (new Date() < eligibleAt) {
+        console.log(
+          `⏭️ Order Not Eligible Yet : ${order.name} | Eligible At : ${eligibleAt.toISOString()}`
+        );
 
-          customerId: order.customer.id,
-          customerEmail: order.customer.email,
-          customerName:
-            `${order.customer.firstName ?? ""} ${order.customer.lastName ?? ""}`.trim() ||
-            null,
+        skipped++;
+        continue;
+      }
 
-          cashbackAmount,
+      // --------------------------------------------------
+      // Order Amount
+      // --------------------------------------------------
+      // Current total, so refunds and order edits reduce the cashback.
+      const orderAmount = Number(
+        order.currentTotalPriceSet?.shopMoney?.amount
+      );
 
-          deliveredAt,
-          eligibleAt,
+      if (!Number.isFinite(orderAmount)) {
+        console.log(`⏭️ Invalid Order Amount : ${order.name}`);
+        skipped++;
+        continue;
+      }
 
-          status: "PENDING",
-        },
+      // --------------------------------------------------
+      // Calculate 5% Cashback
+      // --------------------------------------------------
+      const cashbackAmount = Number((orderAmount * (cashbackPercentage / 100)).toFixed(2));
+
+      if (!Number.isFinite(cashbackAmount) || cashbackAmount <= 0) {
+        console.log(
+          `⏭️ No Cashback (order total ${orderAmount}) : ${order.name}`
+        );
+        skipped++;
+        continue;
+      }
+
+      const customerEmail =
+        order.customer?.defaultEmailAddress?.emailAddress;
+
+      const customerName =
+        `${order.customer?.firstName ?? ""} ${
+          order.customer?.lastName ?? ""
+        }`.trim();
+
+      // --------------------------------------------------
+      // Create Shopify Discount
+      // --------------------------------------------------
+      const coupon = await generateCoupon(admin, {
+        orderId: order.id,
+        orderName: order.name,
+        customerId: order.customer.id,
+        customerEmail,
+        customerName,
+        deliveredAt,
+        eligibleAt,
+        cashbackAmount,
+        couponValidityDays: settings.couponValidityDays,
       });
+
+      console.log(`✅ Shopify Discount Created : ${coupon.discountCode}`);
+
+      // --------------------------------------------------
+      // Create DiscountOffer
+      // --------------------------------------------------
+      let discountOffer;
+
+      try {
+        discountOffer = await createDiscountOffer(
+          shop,
+          {
+            orderId: order.id,
+            orderName: order.name,
+            customerId: order.customer.id,
+            customerEmail,
+            customerName,
+            cashbackAmount,
+            deliveredAt,
+          },
+          coupon
+        );
+      } catch (dbError) {
+        // Don't leave a usable Shopify code without a DB record (e.g. a
+        // concurrent run already saved a reward for this order).
+        try {
+          await deleteShopifyDiscount(admin, coupon.shopifyDiscountId);
+          console.log(
+            `🧹 Removed Shopify Discount After Failed Save : ${coupon.discountCode}`
+          );
+        } catch (cleanupError) {
+          console.error(
+            `❌ Failed To Remove Shopify Discount : ${coupon.discountCode}`,
+            cleanupError
+          );
+        }
+
+        throw dbError;
+      }
+
+      console.log(
+        `✅ DiscountOffer Created : ${discountOffer.id}`
+      );
 
       inserted++;
 
+      // --------------------------------------------------
+      // Send Email
+      // --------------------------------------------------
+      try {
+        if (!customerEmail) {
+          console.log(`⏭️ Email Skipped - Customer Email Missing : ${order.name}`);
+        } else {
+          await sendRewardEmail({
+            customerEmail,
+            customerName,
+            discountCode: coupon.discountCode,
+            cashbackAmount,
+            currency,
+            expiryDate: coupon.endDate,
+          });
+
+          // --------------------------------------------------
+          // Update emailSentAt
+          // --------------------------------------------------
+          await prisma.discountOffer.update({
+            where: {
+              id: discountOffer.id,
+            },
+            data: {
+              emailSentAt: new Date(),
+            },
+          });
+
+          console.log(
+            `📧 Reward Email Sent : ${customerEmail}`
+          );
+        }
+      } catch (emailError) {
+        console.error(
+          `❌ Email Sending Failed : ${customerEmail}`,
+          emailError
+        );
+      }
+
       console.log(
-        `✅ Reward Created : ${order.name} | Eligible At : ${eligibleAt.toISOString()}`
+        `✅ Cashback Flow Completed : ${order.name}`
       );
     } catch (error) {
-      console.error(
-        `❌ Failed to create reward for ${order.name}`,
-        error
-      );
-    }
-  }
-
-  console.log("========== SYNC COMPLETED ==========");
-  console.log(`Inserted : ${inserted}`);
-  console.log(`Skipped  : ${skipped}`);
-
-  return {
-    inserted,
-    skipped,
-  };
-}
-
-export async function processPendingRewards(admin, shop) {
-  console.log("========== PROCESS PENDING REWARDS ==========");
-
-  const pendingRewards = await prisma.reward.findMany({
-    where: {
-      shop,
-      status: "PENDING",
-      eligibleAt: {
-        lte: new Date(),
-      },
-    },
-    orderBy: {
-      eligibleAt: "asc",
-    },
-  });
-
-  console.log(
-    `Eligible Pending Rewards : ${pendingRewards.length}`
-  );
-
-  let completed = 0;
-  let failed = 0;
-
-  for (const reward of pendingRewards) {
-
-    let coupon;
-    let discountOffer;
-
-    // --------------------------------------------------
-    // Reward Generation
-    // --------------------------------------------------
-    try {
-
-      console.log(`Processing Order : ${reward.orderId}`);
-
-      coupon = await generateCoupon(admin, reward);
-
-      discountOffer = await createDiscountOffer(
-        shop,
-        reward,
-        coupon
-      );
-
-      await prisma.reward.update({
-        where: {
-          id: reward.id,
-        },
-        data: {
-          status: "COMPLETED",
-          generatedAt: new Date(),
-
-          discountOfferId: discountOffer.id,
-          discountCode: coupon.discountCode,
-
-          errorMessage: null,
-        },
-      });
-
-      completed++;
-
-      console.log(
-        `✅ Reward Completed : ${reward.orderName}`
-      );
-
-      console.log(
-        `Discount Code : ${coupon.discountCode}`
-      );
-
-      console.log(
-        `End Date : ${coupon.endDate}`
-      );
-
-      console.log(
-        `Discount Offer : ${discountOffer.id}`
-      );
-
-    } catch (error) {
-
       failed++;
 
       console.error(
-        `❌ Reward Generation Failed : ${reward.orderId}`,
+        `❌ Cashback Generation Failed : ${order.name}`,
         error
       );
-
-      await prisma.reward.update({
-        where: {
-          id: reward.id,
-        },
-        data: {
-          retryCount: {
-            increment: 1,
-          },
-          errorMessage: `Reward Error: ${error.message}`,
-        },
-      });
-
-      continue;
-    }
-
-    // --------------------------------------------------
-    // Email Sending (Independent)
-    // --------------------------------------------------
-    try {
-
-      await sendRewardEmail({
-        customerEmail: reward.customerEmail,
-        customerName: reward.customerName,
-        discountCode: coupon.discountCode,
-        cashbackAmount: reward.cashbackAmount.toString(),
-        expiryDate: coupon.endDate,
-      });
-
-      await prisma.reward.update({
-        where: {
-          id: reward.id,
-        },
-        data: {
-          emailSentAt: new Date(),
-        },
-      });
-
-      console.log(
-        `📧 Reward Email Sent : ${reward.customerEmail}`
-      );
-
-    } catch (error) {
-
-      console.error(
-        `❌ Email Sending Failed : ${reward.customerEmail}`,
-        error
-      );
-
-      await prisma.reward.update({
-        where: {
-          id: reward.id,
-        },
-        data: {
-          retryCount: {
-            increment: 1,
-          },
-          errorMessage: `Email Error: ${error.message}`,
-        },
-      });
     }
   }
-
-  console.log("========== REWARD PROCESS COMPLETED ==========");
-
+  
   return {
-    total: pendingRewards.length,
-    completed,
+    inserted,
+    skipped,
     failed,
   };
 }

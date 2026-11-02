@@ -1,8 +1,8 @@
 # Learn more about configuring your app at https://shopify.dev/docs/apps/tools/cli/configuration
 
-client_id = "26763fdc85c37c129b622a78631c0178"
+client_id = "3c547b2f4c5efb6d92a316b9448c8e30"
 name = "smart-discount-manager"
-application_url = "https://example.com"
+application_url = "https://discounts.darveys.com"
 embedded = true
 
 [build]
@@ -29,7 +29,13 @@ api_version = "2026-10"
 scopes = "read_returns,read_assigned_fulfillment_orders,write_assigned_fulfillment_orders,read_customers,write_customers,read_discounts,write_discounts,write_order_edits,read_order_edits,read_orders,write_orders,read_product_listings,write_product_listings,read_products,write_products,customer_read_orders,customer_write_orders"
 
 [auth]
-redirect_urls = [ "https://example.com/api/auth" ]
+redirect_urls = [ "https://discounts.darveys.com/api/auth" ]
+
+# Storefront: /apps/smart-discount/* -> <application_url>/proxy/*
+[app_proxy]
+url = "https://discounts.darveys.com/proxy"
+subpath = "smart-discount"
+prefix = "apps"
 
 [product.metafields.app.demo_info]
 type = "single_line_text_field"
@@ -54,3 +60,12 @@ required = true
 [metaobjects.app.example.fields.description]
 name = "Description"
 type = "multi_line_text_field"
+
+
+[shop.metafields.app.smart_discount_settings]
+type = "json"
+name = "Smart Discount Settings"
+description = "Configuration settings for Smart Discount Manager"
+
+[shop.metafields.app.smart_discount_settings.access]
+admin = "merchant_read"

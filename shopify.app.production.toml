@@ -1,0 +1,47 @@
+# Production config. Select with `shopify app config use production`, then `shopify app deploy`.
+# Dev keeps using shopify.app.toml (tunnel URLs, auto-updated on `shopify app dev`).
+# Learn more at https://shopify.dev/docs/apps/tools/cli/configuration
+
+client_id = "26763fdc85c37c129b622a78631c0178"
+name = "smart-discount-manager"
+application_url = "https://smart-discount-manager.onrender.com"
+embedded = true
+
+[build]
+automatically_update_urls_on_dev = false
+include_config_on_deploy = true
+
+[webhooks]
+# Matches ApiVersion.July26 in app/shopify.server.js; change both together.
+api_version = "2026-07"
+
+  [[webhooks.subscriptions]]
+  uri = "/webhooks/app/scopes_update"
+  topics = [ "app/scopes_update" ]
+
+  [[webhooks.subscriptions]]
+  uri = "/webhooks/app/uninstalled"
+  topics = [ "app/uninstalled" ]
+
+  [[webhooks.subscriptions]]
+  uri = "/webhooks/orders-create"
+  topics = [ "orders/create" ]
+
+[access_scopes]
+# Keep identical to the SCOPES env var on the production host.
+scopes = "read_returns,read_assigned_fulfillment_orders,write_assigned_fulfillment_orders,read_customers,write_customers,read_discounts,write_discounts,write_order_edits,read_order_edits,read_orders,write_orders,read_product_listings,write_product_listings,read_products,write_products,customer_read_orders,customer_write_orders"
+
+[auth]
+redirect_urls = [
+  "https://smart-discount-manager.onrender.com/auth/callback",
+  "https://smart-discount-manager.onrender.com/auth/shopify/callback",
+  "https://smart-discount-manager.onrender.com/api/auth/callback"
+]
+
+[shop.metafields.app.smart_discount_settings]
+type = "json"
+name = "Smart Discount Settings"
+description = "Configuration settings for Smart Discount Manager"
+
+[shop.metafields.app.smart_discount_settings.access]
+admin = "merchant_read"

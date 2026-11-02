@@ -62,8 +62,8 @@ export function validateDiscount(data) {
   }
 
   if (
-    data.customerEligibility === "customers" &&
-    !data.customerIds.trim()
+    data.customerEligibility === "specific_customers" &&
+    !String(data.customerIds ?? "").trim()
   ) {
     errors.customerIds = "Enter customer IDs.";
   }

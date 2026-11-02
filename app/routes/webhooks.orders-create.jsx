@@ -2,20 +2,13 @@ import { authenticate } from "../shopify.server";
 import prisma from "../db.server";
 
 export const action = async ({ request }) => {
-  console.log("=================================");
-  console.log("🔥 ORDER CREATE WEBHOOK RECEIVED");
-  console.log("=================================");
 
   try {
     // -----------------------------------------
     // Authenticate Shopify Webhook
     // -----------------------------------------
 
-    const { shop, payload, admin } =
-      await authenticate.webhook(request);
-
-    console.log("Shop:", shop);
-    console.log("Order ID:", payload.id);
+    const { shop, payload, admin } = await authenticate.webhook(request);
 
     // -----------------------------------------
     // Fetch Order Discount Information
@@ -73,11 +66,6 @@ export const action = async ({ request }) => {
     // -----------------------------------------
 
     if (data.errors) {
-      console.error("❌ GraphQL Errors:");
-      console.error(
-        JSON.stringify(data.errors, null, 2)
-      );
-
       return new Response("GraphQL error", {
         status: 500,
       });
@@ -90,8 +78,6 @@ export const action = async ({ request }) => {
     const order = data.data?.order;
 
     if (!order) {
-      console.error("❌ Order not found:", orderId);
-
       return new Response("Order not found", {
         status: 404,
       });
@@ -113,30 +99,11 @@ export const action = async ({ request }) => {
       .map((discount) => discount.code)
       .filter(Boolean);
 
-    console.log("=================================");
-    console.log("🎟️ APPLIED DISCOUNTS");
-    console.log("=================================");
-
-    console.log(
-      "Discount Codes:",
-      discountCodes
-    );
-
-    console.log(
-      "Total Discount:",
-      order.totalDiscountsSet?.shopMoney?.amount,
-      order.totalDiscountsSet?.shopMoney?.currencyCode
-    );
-
     // -----------------------------------------
     // No Discount Code Applied
     // -----------------------------------------
 
     if (discountCodes.length === 0) {
-      console.log(
-        "ℹ️ No discount code applied to this order"
-      );
-
       return new Response("No discount code", {
         status: 200,
       });
@@ -147,10 +114,6 @@ export const action = async ({ request }) => {
     // -----------------------------------------
 
     for (const discountCode of discountCodes) {
-      console.log(
-        `🔍 Searching DiscountOffer: ${discountCode}`
-      );
-
       const discountOffer =
         await prisma.discountOffer.findFirst({
           where: {
@@ -165,26 +128,14 @@ export const action = async ({ request }) => {
       // -----------------------------------------
 
       if (!discountOffer) {
-        console.log(
-          `⚠️ DiscountOffer not found: ${discountCode}`
-        );
-
         continue;
       }
-
-      console.log(
-        `✅ DiscountOffer found: ${discountOffer.id}`
-      );
 
       // -----------------------------------------
       // Already Used
       // -----------------------------------------
 
       if (discountOffer.status === "used") {
-        console.log(
-          `ℹ️ Discount already marked as used: ${discountCode}`
-        );
-
         continue;
       }
 
@@ -200,26 +151,14 @@ export const action = async ({ request }) => {
           status: "used",
         },
       });
-
-      console.log(
-        `✅ DiscountOffer marked as USED: ${discountCode}`
-      );
     }
-
-    console.log("=================================");
-    console.log("✅ ORDER WEBHOOK PROCESSING COMPLETE");
-    console.log("=================================");
 
     return new Response("OK", {
       status: 200,
     });
 
   } catch (error) {
-    console.error("=================================");
-    console.error("❌ WEBHOOK ERROR");
-    console.error("=================================");
     console.error(error);
-
     return new Response(
       "Webhook processing failed",
       {

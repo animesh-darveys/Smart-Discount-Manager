@@ -27,17 +27,12 @@ function generateCouponCode() {
   return `DARCSB${timestamp}${random}`;
 }
 
-export async function generateCoupon(admin, reward) {
+export async function generateCoupon(admin, discountData) {
   const couponCode = generateCouponCode();
 
   const input = buildCashbackDiscountInput(
-    reward,
+    discountData,
     couponCode
-  );
-
-  console.log(
-    "Cashback Discount Input",
-    JSON.stringify(input, null, 2)
   );
 
   const response = await admin.graphql(
@@ -51,11 +46,6 @@ export async function generateCoupon(admin, reward) {
 
   const result = await response.json();
 
-  console.log(
-    "Cashback Discount Response",
-    JSON.stringify(result, null, 2)
-  );
-
   const payload =
     result?.data?.discountCodeBasicCreate;
 
@@ -63,7 +53,7 @@ export async function generateCoupon(admin, reward) {
     throw new Error("Invalid Shopify response.");
   }
 
-  if (payload.userErrors.length) {
+  if (payload.userErrors?.length) {
     throw new Error(
       payload.userErrors
         .map((error) => error.message)
@@ -71,9 +61,16 @@ export async function generateCoupon(admin, reward) {
     );
   }
 
+  if (!payload.codeDiscountNode?.id) {
+    throw new Error(
+      "Shopify discount was created but discount ID was not returned."
+    );
+  }
+
   return {
-    discountOfferId:payload.codeDiscountNode.id,
+    shopifyDiscountId: payload.codeDiscountNode.id,
     discountCode: couponCode,
+    startDate: input.startsAt,
     endDate: input.endsAt,
   };
 }

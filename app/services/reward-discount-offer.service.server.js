@@ -2,57 +2,74 @@ import prisma from "../db.server";
 
 export async function createDiscountOffer(
   shop,
-  reward,
+  discountData,
   coupon
 ) {
-  const startDate = new Date();
+  // Same dates as the Shopify discount.
+  const startDate = new Date(coupon.startDate);
+  const endDate = new Date(coupon.endDate);
 
-  const endDate = new Date(startDate);
-  endDate.setDate(endDate.getDate() + 60);
+  const discountOffer = await prisma.discountOffer.create({
+    data: {
+      shop,
 
-  const discountOffer =
-    await prisma.discountOffer.create({
-      data: {
-        shop,
+      title: `Cashback Reward - ${discountData.orderName}`,
 
-        title: `Cashback Reward - ${reward.orderName}`,
+      description:
+        "Auto-generated cashback reward",
 
-        description:
-          "Auto-generated cashback reward",
+      // Order information
+      orderId: discountData.orderId,
+      orderName: discountData.orderName,
 
-        discountCode: coupon.discountCode,
+      // Customer information
+      customerId: discountData.customerId,
+      customerName: discountData.customerName,
+      customerEmail: discountData.customerEmail,
 
-        discountCategory: "order",
+      // Cashback information
+      cashbackAmount: Number(
+        discountData.cashbackAmount
+      ),
 
-        discountType: "FIXED_AMOUNT",
+      deliveredAt: discountData.deliveredAt,
 
-        discountValue: Number(
-          reward.cashbackAmount
-        ),
+      generatedAt: new Date(),
 
-        appliesTo: "all",
+      // Shopify discount information
+      discountCode: coupon.discountCode,
 
-        customerEligibility:
-          "specific_customers",
+      discountCategory: "order",
 
-        customerIds: [reward.customerId],
+      discountType: "FIXED_AMOUNT",
 
-        startDate,
+      discountValue: Number(
+        discountData.cashbackAmount
+      ),
 
-        endDate,
+      appliesTo: "all",
 
-        usageLimit: 1,
+      customerEligibility:
+        "specific_customers",
 
-        limitPerCustomer: true,
+      customerIds: [discountData.customerId],
 
-        status: "active",
+      startDate,
 
-        source: "AUTO_REWARD",
+      endDate,
 
-        shopifyDiscountId:
-          coupon.discountOfferId,
-      },
-    });
+      usageLimit: 1,
+
+      limitPerCustomer: true,
+
+      status: "active",
+
+      source: "AUTO_REWARD",
+
+      shopifyDiscountId:
+        coupon.shopifyDiscountId,
+    },
+  });
 
   return discountOffer;
 }

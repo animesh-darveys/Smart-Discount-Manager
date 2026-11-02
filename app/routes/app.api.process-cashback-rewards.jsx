@@ -1,39 +1,32 @@
 import { authenticate } from "../shopify.server";
 
-import { getDeliveredOrders } from "../services/order.service.server";
-
 import {
-  syncOrdersToRewards,
-  processPendingRewards,
-} from "../services/reward.service.server";
+  JobAlreadyRunningError,
+  runJobForShop,
+} from "../services/scheduled-jobs.server";
 
+// Manual run from the admin. The scheduled run is POST /api/cron/process-cashback-rewards.
 export async function loader({ request }) {
   try {
     const { admin, session } = await authenticate.admin(request);
 
-    // Step 1 - Fetch delivered orders
-    const orders = await getDeliveredOrders(admin);
-
-    // Step 2 - Sync rewards
-    const syncResult = await syncOrdersToRewards(
-      session.shop,
-      orders
-    );
-
-    // Step 3 - Process pending rewards
-    const processResult = await processPendingRewards(
+    // Fetch delivered orders, then process the cashback flow.
+    const result = await runJobForShop(
+      "process-cashback-rewards",
       admin,
       session.shop
     );
 
     return Response.json({
       success: true,
-      sync: syncResult,
-      process: processResult,
+      result,
     });
-
   } catch (error) {
-    console.error("Reward Cron Error:", error);
+    if (error instanceof Response) {
+      throw error;
+    }
+
+    console.error("Cashback Processing Error:", error);
 
     return Response.json(
       {
@@ -41,7 +34,7 @@ export async function loader({ request }) {
         error: error.message,
       },
       {
-        status: 500,
+        status: error instanceof JobAlreadyRunningError ? 409 : 500,
       }
     );
   }

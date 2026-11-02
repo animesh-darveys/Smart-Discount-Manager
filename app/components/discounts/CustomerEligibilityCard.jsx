@@ -8,6 +8,7 @@ import {
 import PropTypes from "prop-types";
 
 export default function CustomerEligibilityCard({
+  mode = "create",
   customerEligibility,
   customerIds,
   onEligibilityChange,
@@ -35,9 +36,12 @@ export default function CustomerEligibilityCard({
               label: "Specific Customers",
               value: "specific_customers",
             }
-          ]}
+          ].filter(
+            (choice) => mode !== "edit" || choice.value === customerEligibility
+          )}
           selected={[customerEligibility]}
           onChange={handleEligibilityChange}
+          disabled={mode === "edit"}
         />
 
         {customerEligibility === "specific_customers" && (
@@ -47,7 +51,7 @@ export default function CustomerEligibilityCard({
             onChange={onCustomerIdsChange}
             autoComplete="off"
             placeholder={`gid://shopify/Customer/123456789`}
-            helpText="Enter Shopify Customer GID"
+            helpText="Customer IDs or GIDs, separated by commas"
           />
         )}
       </BlockStack>
@@ -55,4 +59,4 @@ export default function CustomerEligibilityCard({
   );
 }
 
-CustomerEligibilityCard.propTypes = { customerEligibility: PropTypes.string.isRequired, customerIds: PropTypes.string.isRequired, onEligibilityChange: PropTypes.func.isRequired, onCustomerIdsChange: PropTypes.func.isRequired, };
+CustomerEligibilityCard.propTypes = { customerEligibility: PropTypes.string.isRequired, customerIds: PropTypes.string.isRequired, onEligibilityChange: PropTypes.func.isRequired, onCustomerIdsChange: PropTypes.func.isRequired, mode: PropTypes.string, };

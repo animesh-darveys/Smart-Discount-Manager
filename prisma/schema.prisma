@@ -11,16 +11,16 @@ model Session {
   id                  String    @id
   shop                String
   state               String
-  isOnline            Boolean   @default(false)
+  isOnline             Boolean   @default(false)
   scope               String?
   expires             DateTime?
   accessToken         String
   userId              BigInt?
-  firstName           String?
-  lastName            String?
-  email               String?
+  firstName            String?
+  lastName             String?
+  email                String?
   accountOwner        Boolean   @default(false)
-  locale              String?
+  locale               String?
   collaborator        Boolean?  @default(false)
   emailVerified       Boolean?  @default(false)
   refreshToken        String?
@@ -30,7 +30,6 @@ model Session {
 model DiscountOffer {
   id                  String         @id @default(cuid())
 
-  // Multi-store support
   shop                String
 
   // General
@@ -65,52 +64,23 @@ model DiscountOffer {
   startDate           DateTime
   endDate             DateTime?
 
+  // AUTO_REWARD / Cashback Information
+  orderId             String?
+  orderName           String?
+  customerId          String?
+  customerName        String?
+  customerEmail       String?
+  cashbackAmount      Float?
+  deliveredAt         DateTime?
+  generatedAt         DateTime?
+  emailSentAt         DateTime?
+
   // Status
   status              String         @default("active")
 
   // Audit
-  createdAt           DateTime       @default(now())
-  updatedAt           DateTime       @updatedAt
-
-  @@index([shop])
-}
-
-model Reward {
-  id              String       @id @default(cuid())
-
-  // Multi-store support
-  shop            String
-
-  // Shopify Order
-  orderId         String
-  orderName       String
-
-  // Customer
-  customerId      String
-  customerEmail   String
-  customerName    String?
-
-  // Generated Discount
-  discountOfferId String?
-  discountCode    String?
-  cashbackAmount  Decimal      @db.Decimal(10, 2)
-
-  // Processing
-  status          RewardStatus @default(PENDING)
-
-  // Timeline
-  deliveredAt     DateTime
-  eligibleAt      DateTime
-  generatedAt     DateTime?
-  emailSentAt     DateTime?
-
-  // Error Handling
-  retryCount      Int          @default(0)
-  errorMessage    String?
-
-  // Audit
-  createdAt       DateTime     @default(now())
-  updatedAt       DateTime     @updatedAt
+  createdAt            DateTime       @default(now())
+  updatedAt            DateTime       @updatedAt
 
   @@unique([shop, orderId])
   @@index([shop])
@@ -119,11 +89,4 @@ model Reward {
 enum DiscountSource {
   MANUAL
   AUTO_REWARD
-}
-
-enum RewardStatus {
-  PENDING
-  COMPLETED
-  CANCELLED
-  FAILED
 }

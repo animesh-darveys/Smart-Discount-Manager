@@ -1,11 +1,20 @@
-export function buildCashbackDiscountInput(reward, couponCode) {
+export function buildCashbackDiscountInput(
+  discountData,
+  couponCode
+) {
   const startsAt = new Date();
+  const couponValidityDays = Number(discountData.couponValidityDays);
+
+  if (!Number.isFinite(couponValidityDays) || couponValidityDays <= 0  ) {
+    throw new Error("Invalid coupon validity days");
+  }
 
   const endsAt = new Date(startsAt);
-  endsAt.setDate(endsAt.getDate() + 60);
+
+  endsAt.setDate(endsAt.getDate() + couponValidityDays);
 
   return {
-    title: `Cashback Reward - ${reward.orderName}`,
+    title: `Cashback Reward - ${discountData.orderName}`,
 
     code: couponCode,
 
@@ -17,9 +26,9 @@ export function buildCashbackDiscountInput(reward, couponCode) {
 
     usageLimit: 1,
 
-    context: buildContext(reward),
+    context: buildContext(discountData),
 
-    customerGets: buildCustomerGets(reward),
+    customerGets: buildCustomerGets(discountData),
 
     combinesWith: {
       orderDiscounts: false,
@@ -29,32 +38,28 @@ export function buildCashbackDiscountInput(reward, couponCode) {
   };
 }
 
-function buildContext(reward) {
+function buildContext(discountData) {
   return {
     customers: {
-      add: [reward.customerId],
+      add: [discountData.customerId],
     },
   };
 }
 
-function buildCustomerGets(reward) {
+function buildCustomerGets(discountData) {
   return {
-    value: buildDiscountValue(reward),
+    value: buildDiscountValue(discountData),
 
     items: {
       all: true,
     },
-
-    appliesOnOneTimePurchase: true,
-
-    appliesOnSubscription: false,
   };
 }
 
-function buildDiscountValue(reward) {
+function buildDiscountValue(discountData) {
   return {
     discountAmount: {
-      amount: Number(reward.cashbackAmount),
+      amount: Number(discountData.cashbackAmount),
 
       appliesOnEachItem: false,
     },

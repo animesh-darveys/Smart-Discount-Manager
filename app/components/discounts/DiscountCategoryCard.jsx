@@ -27,7 +27,9 @@ export default function DiscountCategoryCard({
               label: "Amount Off Products",
               value: "product",
             },
-          ]}
+          ].filter(
+            (choice) => mode !== "edit" || choice.value === discountCategory
+          )}
         />
       </BlockStack>
     </Card>

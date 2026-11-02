@@ -83,11 +83,6 @@ mutation discountCodeDelete($id: ID!) {
 export async function createShopifyDiscount(admin, body) {
   const input = buildCreateInput(body);
 
-  console.log(
-    "Shopify Discount Input",
-    JSON.stringify(input, null, 2),
-  );
-
   const response = await admin.graphql(
     CREATE_DISCOUNT_MUTATION,
     {
@@ -98,11 +93,6 @@ export async function createShopifyDiscount(admin, body) {
   );
 
   const result = await response.json();
-
-  console.log(
-    "Shopify Discount Response",
-    JSON.stringify(result, null, 2),
-  );
 
   const payload =
     result?.data?.discountCodeBasicCreate;
@@ -211,22 +201,16 @@ export async function updateShopifyDiscount(admin, body) {
 const existingResult = await existingResponse.json();
 
 const existingItems =
-  existingResult.data.codeDiscountNode.codeDiscount.customerGets.items;
+  existingResult?.data?.codeDiscountNode?.codeDiscount?.customerGets?.items;
 
-console.log(
-  "Existing Shopify Items",
-  JSON.stringify(existingItems, null, 2),
-);
+if (!existingItems) {
+  throw new Error("Discount was not found in Shopify.");
+}
 
 const input = buildUpdateInput({
   ...body,
   existingItems,
 });
-
-// console.log(
-//   "Shopify Update Discount Input",
-//   JSON.stringify(input, null, 2),
-// );
 
   const response = await admin.graphql(
     UPDATE_DISCOUNT_MUTATION,
@@ -239,11 +223,6 @@ const input = buildUpdateInput({
   );
 
   const result = await response.json();
-
-  // console.log(
-  //   "Shopify Update Discount Response",
-  //   JSON.stringify(result, null, 2),
-  // );
 
   const payload =
     result?.data?.discountCodeBasicUpdate;

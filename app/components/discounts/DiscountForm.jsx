@@ -174,14 +174,29 @@ export default function DiscountForm({
             status,
         });
 
-        if (!result.success) return;
+        // API / Shopify error
+        if (!result.success) {
+            shopify.toast.show(
+                result.message || "Unable to save discount.",
+                {
+                    isError: true,
+                    duration: 5000,
+                }
+            );
 
+            return;
+        }
+
+        // Success
         shopify.toast.show(
-        mode === "edit"
-            ? "Discount updated successfully."
-            : "Discount created successfully."
+            mode === "edit"
+                ? "Discount updated successfully."
+                : "Discount created successfully.",
+            {
+                isError: false,
+                duration: 5000,
+            }
         );
-
 
         if (mode === "create") {
             resetForm();
@@ -201,14 +216,18 @@ export default function DiscountForm({
 
         setAppliesTo(discount.appliesTo || "products");
 
-        setSelectedProducts(discount.selectedProducts || []);
-        setSelectedCollections(discount.selectedCollections || []);
+        setSelectedProducts(discount.selectedProducts ?? []);
+        setSelectedCollections(discount.selectedCollections ?? []);
 
         setCustomerEligibility(
             discount.customerEligibility || "all_customer"
         );
 
-        setCustomerIds(discount.customerIds || "");
+        setCustomerIds(
+            Array.isArray(discount.customerIds)
+                ? discount.customerIds.join(", ")
+                : discount.customerIds || ""
+        );
 
         setStartDate(
             discount.startDate
@@ -294,6 +313,7 @@ export default function DiscountForm({
                         customerIds={customerIds}
                         onEligibilityChange={handleCustomerEligibilityChange}
                         onCustomerIdsChange={setCustomerIds}
+                        mode={mode}
                     />
                     <UsageLimitCard
                         usageLimit={usageLimit}
@@ -330,6 +350,6 @@ export default function DiscountForm({
     );
 }
 DiscountForm.propTypes = {
-  mode: PropTypes.string,
-  discount: PropTypes.object,
+    mode: PropTypes.string,
+    discount: PropTypes.object,
 };

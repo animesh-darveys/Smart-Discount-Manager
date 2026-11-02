@@ -16,19 +16,11 @@ export async function expireDiscounts(admin, shop) {
     },
   });
 
-  console.log(
-    `[Discount Expiry] Found ${discounts.length} expired discount(s)`
-  );
-
   let success = 0;
   let failed = 0;
 
   for (const discount of discounts) {
     try {
-      console.log(
-        `[Discount Expiry] Expiring ${discount.discountCode}`
-      );
-
       // Deactivate Shopify discount
       if (discount.shopifyDiscountId) {
         await deactivateShopifyDiscount(
@@ -52,7 +44,7 @@ export async function expireDiscounts(admin, shop) {
       failed++;
 
       console.error(
-        `[Discount Expiry] Failed for ${discount.discountCode}`,
+        `Failed to expire discount ${discount.discountCode} (${discount.id}):`,
         error
       );
     }

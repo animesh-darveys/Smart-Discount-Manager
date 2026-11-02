@@ -1,3 +1,5 @@
+import { toCustomerGids } from "./customer-ids.server";
+
 export function buildCreateInput(body) {
   return {
     title: body.title,
@@ -18,7 +20,7 @@ export function buildCreateInput(body) {
 
     context: buildContext(body),
 
-    customerGets: buildCustomerGets(body, true),
+    customerGets: buildCustomerGets(body, false),
 
     ...(body.minimumPurchase && {
       minimumRequirement: buildMinimumRequirement(body),
@@ -26,48 +28,61 @@ export function buildCreateInput(body) {
   };
 }
 
+// Update input sends every field explicitly: an omitted field keeps its old
+// value in Shopify, so cleared fields must be sent as null.
 export function buildUpdateInput(body) {
   return {
     title: body.title,
+    code: body.discountCode,
 
     startsAt: new Date(body.startDate).toISOString(),
 
-    ...(body.hasEndDate &&
-      body.endDate && {
-        endsAt: new Date(body.endDate).toISOString(),
-      }),
+    endsAt:
+      body.hasEndDate && body.endDate
+        ? new Date(body.endDate).toISOString()
+        : null,
 
     appliesOncePerCustomer: body.limitPerCustomer,
 
-    ...(body.usageLimit && {
-      usageLimit: Number(body.usageLimit),
-    }),
+    usageLimit: body.usageLimit ? Number(body.usageLimit) : null,
 
-    context: buildContext(body),
+    context: buildContext(body, body.existingCustomerIds),
 
     customerGets: buildCustomerGets(body, true),
 
-    ...(body.minimumPurchase && {
-      minimumRequirement: buildMinimumRequirement(body),
-    }),
+    minimumRequirement: body.minimumPurchase
+      ? buildMinimumRequirement(body)
+      : { subtotal: { greaterThanOrEqualToSubtotal: null } },
   };
 }
 
-function buildContext(body) {
+function buildContext(body, existingCustomerIds = []) {
   switch (body.customerEligibility) {
     case "all_customer":
       return {
         all: "ALL",
       };
 
-    case "specific_customers":
+    case "specific_customers": {
+      const customerIds = toCustomerGids(body.customerIds);
+
+      if (customerIds.length === 0) {
+        throw new Error("Enter at least one customer ID.");
+      }
+
+      const removedCustomerIds = toCustomerGids(
+        existingCustomerIds ?? []
+      ).filter((id) => !customerIds.includes(id));
+
       return {
         customers: {
-          add: Array.isArray(body.customerIds)
-            ? body.customerIds
-            : [body.customerIds],
+          add: customerIds,
+          ...(removedCustomerIds.length > 0 && {
+            remove: removedCustomerIds,
+          }),
         },
       };
+    }
 
     default:
       throw new Error(
@@ -81,10 +96,6 @@ function buildCustomerGets(body, isUpdate = false) {
     value: buildDiscountValue(body),
 
     items: buildItems(body, isUpdate),
-
-    appliesOnOneTimePurchase: true,
-
-    appliesOnSubscription: false,
   };
 }
 
@@ -149,9 +160,6 @@ if (
     (id) => !newProducts.includes(id)
   );
 
-  console.log("productsToAdd", productsToAdd);
-  console.log("productsToRemove", productsToRemove);
-
   return {
     products: {
       productsToAdd: productsToAdd,
@@ -190,9 +198,6 @@ if (
   const collectionsToRemove = existingCollections.filter(
     (id) => !newCollections.includes(id)
   );
-
-  console.log("collectionsToAdd", collectionsToAdd);
-  console.log("collectionsToRemove", collectionsToRemove);
 
   return {
     collections: {

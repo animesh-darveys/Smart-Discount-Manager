@@ -6,14 +6,41 @@ if (!process.env.SENDGRID_API_KEY) {
 
 sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
+// Customer names come from Shopify and are user-entered.
+function escapeHtml(value) {
+  return String(value)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+function formatMoney(amount, currency) {
+  try {
+    return new Intl.NumberFormat("en-GB", {
+      style: "currency",
+      currency: currency || "GBP",
+    }).format(Number(amount));
+  } catch {
+    return `${currency ?? ""} ${Number(amount).toFixed(2)}`.trim();
+  }
+}
+
 export async function sendRewardEmail({
   customerEmail,
   customerName,
   discountCode,
   cashbackAmount,
+  currency,
   expiryDate,
 }) {
   try {
+    const formattedCashback = escapeHtml(
+      formatMoney(cashbackAmount, currency)
+    );
+    const safeCustomerName = escapeHtml(customerName || "Customer");
+    const safeDiscountCode = escapeHtml(discountCode);
     const formattedExpiryDate = new Date(expiryDate).toLocaleDateString( "en-GB", { day: "2-digit", month: "long", year: "numeric", } );
     const message = {
       to: customerEmail,
@@ -53,7 +80,7 @@ export async function sendRewardEmail({
                       </h2>
 
                       <p style="font-size:16px;">
-                        Hello <strong>${customerName || "Customer"}</strong>,
+                        Hello <strong>${safeCustomerName}</strong>,
                       </p>
 
                       <p>
@@ -79,7 +106,7 @@ export async function sendRewardEmail({
 
                         <tr>
                           <td><strong>Cashback</strong></td>
-                          <td>£${cashbackAmount}</td>
+                          <td>${formattedCashback}</td>
                         </tr>
 
                         <tr>
@@ -94,7 +121,7 @@ export async function sendRewardEmail({
                                 letter-spacing:1px;
                               "
                             >
-                              ${discountCode}
+                              ${safeDiscountCode}
                             </span>
                           </td>
                         </tr>

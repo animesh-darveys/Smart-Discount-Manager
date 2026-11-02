@@ -90,7 +90,9 @@ const handleEligibilityChange = async (value) => {
           choices={[
             { label: "Specific Products", value: "products" },
             { label: "Specific Collections", value: "collections" },
-          ]}
+          ].filter(
+            (choice) => mode !== "edit" || choice.value === appliesTo
+          )}
           selected={[appliesTo]}
           onChange={handleEligibilityChange}
         />
